@@ -27,3 +27,6 @@ coverage
 
 # Git worktrees (per-task branches)
 onlymaj/
+
+# Docker image artifacts
+*.tar
