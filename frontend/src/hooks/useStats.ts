@@ -1,18 +1,27 @@
-import { CHART_SERIES, SUMMARY_STATS, UPTIME, getLiveStats } from '@/data/mock'
-import { useAppStore } from '@/store/appStore'
+import {
+  EMPTY_LIVE_STATS,
+  EMPTY_SERIES,
+  availabilityPct,
+  emptySummary,
+  toChartSeries,
+  toLiveStats,
+  toOutageEvents,
+  toSummaryStats,
+} from '@/data/starlink'
 
-/**
- * Telemetry for the Home + Statistics screens. Live headline stats depend on the
- * current device state (e.g. "—" when stowed/offline); summary stats and time
- * series are static mock data. Replace the bodies here with API/WebSocket reads.
- */
+import { useLiveTelemetry } from './useLiveTelemetry'
+
 export function useStats() {
-  const deviceState = useAppStore((s) => s.deviceState)
+  const { status, history } = useLiveTelemetry()
 
   return {
-    live: getLiveStats(deviceState),
-    summary: SUMMARY_STATS,
-    series: CHART_SERIES,
-    uptime: UPTIME,
+    live: status ? toLiveStats(status) : EMPTY_LIVE_STATS,
+    summary: status ? toSummaryStats(status, history) : emptySummary(),
+    series: history ? toChartSeries(history) : EMPTY_SERIES,
+    events: history ? toOutageEvents(history) : [],
+    uptime: {
+      pct: status ? availabilityPct(status) : 0,
+      note: status ? 'Live reading' : 'Waiting for the dish…',
+    },
   }
 }

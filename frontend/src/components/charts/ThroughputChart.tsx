@@ -6,8 +6,6 @@ interface ThroughputChartProps {
   max?: number
 }
 
-/** Dual-series throughput preset over the shared LineChart (download area +
- * upload line, grid, hour labels, hover tooltip). */
 export function ThroughputChart({ download, upload, max = 200 }: ThroughputChartProps) {
   return (
     <LineChart

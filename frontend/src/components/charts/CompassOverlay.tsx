@@ -2,11 +2,6 @@ import { useTheme } from '@/hooks/useTheme'
 
 const PERSPECTIVE = 'translate(-50%,-50%) perspective(760px) rotateX(66deg)'
 
-/**
- * Perspective-tilted compass dial overlaid on the 3D hero, giving the floating
- * device a "ground plane" of bearings. Ported from the comp's `_compass()`.
- * Positioned over the device origin (which is fixed for our static camera).
- */
 export function CompassOverlay() {
   const { isDark } = useTheme()
   const tickRGB = isDark ? '255,255,255' : '40,40,46'

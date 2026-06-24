@@ -1,5 +1,3 @@
-/** Scene lighting ported from the comp: hemisphere ambient + key/fill
- * directional lights + a cool rim spot. */
 export function Lights() {
   return (
     <>

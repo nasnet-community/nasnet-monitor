@@ -20,7 +20,6 @@ import (
 
 const deviceProtoPath = "spacex/device_mock.proto"
 
-// bufTarget is the (ignored) dial target used with a bufconn context dialer.
 const bufTarget = "passthrough:///bufnet"
 
 var (
@@ -28,8 +27,6 @@ var (
 	deviceSchemaVal  *protoregistry.Files
 )
 
-// deviceSchema builds a minimal SpaceX.API.Device schema and registers it into the
-// global proto registry once, so gRPC server reflection can serve it.
 func deviceSchema(t *testing.T) *protoregistry.Files {
 	t.Helper()
 	deviceSchemaOnce.Do(func() {
@@ -49,9 +46,6 @@ func deviceSchema(t *testing.T) *protoregistry.Files {
 	return deviceSchemaVal
 }
 
-// startMockDish starts an in-process gRPC server that serves the Device service
-// (returning a canned get_status response) with reflection enabled, and returns
-// its bufconn listener.
 func startMockDish(t *testing.T) *bufconn.Listener {
 	t.Helper()
 	files := deviceSchema(t)
@@ -80,7 +74,6 @@ func startMockDish(t *testing.T) *bufconn.Listener {
 	return lis
 }
 
-// dialOptions returns dial options that route through the bufconn listener.
 func dialOptions(lis *bufconn.Listener) []grpc.DialOption {
 	return []grpc.DialOption{
 		grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
@@ -103,7 +96,6 @@ func mustMessage(t *testing.T, files *protoregistry.Files, name string) protoref
 	return md
 }
 
-// cannedResponse builds a Response{get_status:{id, hardware_version}} message.
 func cannedResponse(t *testing.T, files *protoregistry.Files) *dynamicpb.Message {
 	t.Helper()
 	respDesc := mustMessage(t, files, "SpaceX.API.Device.Response")
@@ -116,7 +108,6 @@ func cannedResponse(t *testing.T, files *protoregistry.Files) *dynamicpb.Message
 	return resp
 }
 
-// deviceFDP hand-builds the minimal SpaceX.API.Device file descriptor.
 func deviceFDP() *descriptorpb.FileDescriptorProto {
 	str := func(name string, num int32) *descriptorpb.FieldDescriptorProto {
 		return &descriptorpb.FieldDescriptorProto{

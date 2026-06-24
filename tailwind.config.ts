@@ -1,20 +1,12 @@
 import type { Config } from 'tailwindcss'
 import animate from 'tailwindcss-animate'
 
-/**
- * The Nasnet palette is expressed as raw CSS custom properties (hex / rgba) in
- * `src/index.css`, switched by the `[data-theme]` attribute on <html>. We map
- * both the shadcn semantic tokens and the comp's bespoke tokens onto those vars
- * so utilities like `bg-card`, `text-muted-foreground`, `border-border` work and
- * react to the theme automatically.
- */
 const config: Config = {
   darkMode: ['selector', '[data-theme="dark"]'],
   content: ['./frontend/index.html', './frontend/src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        // shadcn semantic tokens
         background: 'var(--background)',
         foreground: 'var(--foreground)',
         border: 'var(--border)',
@@ -49,7 +41,6 @@ const config: Config = {
           foreground: 'var(--destructive-foreground)',
         },
 
-        // Nasnet bespoke tokens (mirror the comp's CSS variables)
         surface: 'var(--surface)',
         card2: 'var(--card2)',
         'border-strong': 'var(--border-strong)',
@@ -57,7 +48,6 @@ const config: Config = {
         track: 'var(--track)',
         grid: 'var(--grid)',
 
-        // status palette
         status: {
           online: 'var(--status-online)',
           warn: 'var(--status-warn)',
@@ -84,10 +74,25 @@ const config: Config = {
           '0%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' },
         },
+        'nas-float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'nas-dot': {
+          '0%, 100%': { opacity: '0.35', transform: 'scale(0.85)' },
+          '50%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'nas-beam': {
+          '0%': { strokeDashoffset: '0' },
+          '100%': { strokeDashoffset: '-28' },
+        },
       },
       animation: {
         'nas-pulse': 'nas-pulse 2.4s ease-in-out infinite',
         'nas-sweep': 'nas-sweep 4s linear infinite',
+        'nas-float': 'nas-float 5s ease-in-out infinite',
+        'nas-dot': 'nas-dot 1.8s ease-in-out infinite',
+        'nas-beam': 'nas-beam 0.6s linear infinite',
       },
     },
   },

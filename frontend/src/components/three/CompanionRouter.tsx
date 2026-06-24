@@ -7,8 +7,6 @@ interface CompanionRouterProps {
   ledColor: number
 }
 
-/** Small companion Wi-Fi router beside the dish, with a state-colored LED.
- * Ported from the comp's router group. */
 export function CompanionRouter({ ledColor }: CompanionRouterProps) {
   const ledMat = useRef<THREE.MeshBasicMaterial>(null)
 

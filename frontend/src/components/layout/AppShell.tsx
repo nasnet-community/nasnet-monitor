@@ -1,14 +1,13 @@
 import { Outlet } from 'react-router-dom'
 
+import { useTelemetryPoller } from '@/hooks/useLiveTelemetry'
+
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 
-/**
- * Top-level layout: a fixed sidebar beside a scrolling main column with a sticky
- * header. Mirrors the comp's flex shell, including the responsive collapse where
- * the sidebar becomes a horizontal icon bar on narrow viewports.
- */
 export function AppShell() {
+  useTelemetryPoller()
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground md:h-screen md:min-h-0 md:flex-row md:overflow-hidden">
       <Sidebar />

@@ -1,13 +1,16 @@
 import { useCallback } from 'react'
 
-import { ALIGNMENT_DATA } from '@/data/mock'
+import { EMPTY_ALIGNMENT, toAlignmentData } from '@/data/starlink'
 
-/** Azimuth/elevation/quality + a (mock) re-run action for the Alignment screen. */
+import { useLiveTelemetry } from './useLiveTelemetry'
+
 export function useAlignment() {
+  const { status } = useLiveTelemetry()
+
   const rerun = useCallback(() => {
-    // Placeholder for triggering a real auto-alignment routine on the kit.
-    console.info('[nasnet] re-run auto alignment requested')
+    console.info('[nasnet] auto-alignment is handled by the dish; values refresh on poll')
   }, [])
 
-  return { ...ALIGNMENT_DATA, rerun }
+  const data = status ? toAlignmentData(status) : EMPTY_ALIGNMENT
+  return { ...data, rerun }
 }

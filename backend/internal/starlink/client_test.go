@@ -52,6 +52,23 @@ func TestClient_Describe(t *testing.T) {
 	}
 }
 
+func TestClient_DescribeRequest(t *testing.T) {
+	lis := startMockDish(t)
+	c := NewClient(NewReflectionAdapter(), WithDialOptions(dialOptions(lis)...))
+
+	info, err := c.DescribeRequest(context.Background(), bufTarget, "get_status")
+	if err != nil {
+		t.Fatalf("DescribeRequest: %v", err)
+	}
+	if info.Name != "SpaceX.API.Device.GetStatusRequest" {
+		t.Errorf("name = %q, want SpaceX.API.Device.GetStatusRequest", info.Name)
+	}
+
+	if _, err := c.DescribeRequest(context.Background(), bufTarget, "no_such_request"); err == nil {
+		t.Error("expected error for unknown request name")
+	}
+}
+
 func TestClient_Invoke_Unreachable(t *testing.T) {
 	c := NewClient(NewReflectionAdapter(), WithTimeout(time.Second))
 

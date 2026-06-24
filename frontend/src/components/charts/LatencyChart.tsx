@@ -6,7 +6,6 @@ interface LatencyChartProps {
   color?: string
 }
 
-/** Single-series latency preset over the shared LineChart (grid + hover). */
 export function LatencyChart({ data, max = 60, color = '#f59e0b' }: LatencyChartProps) {
   return (
     <LineChart

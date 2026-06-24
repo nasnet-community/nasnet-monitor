@@ -7,7 +7,6 @@ interface SparklineProps {
   height?: number
 }
 
-/** Signal-quality sparkline preset over the shared LineChart (area + hover). */
 export function Sparkline({ data, max = 100, color = '#22c55e', height = 56 }: SparklineProps) {
   return (
     <LineChart

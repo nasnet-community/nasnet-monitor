@@ -1,10 +1,8 @@
 interface UptimeRingProps {
   pct: number
-  /** Label rendered under the big number, e.g. "% last 30 days". */
   caption?: string
 }
 
-/** Circular uptime gauge using stroke-dashoffset. Ported from `_uptimeRing()`. */
 export function UptimeRing({ pct, caption = '% last 30 days' }: UptimeRingProps) {
   const R = 70
   const circ = 2 * Math.PI * R

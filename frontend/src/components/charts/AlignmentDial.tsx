@@ -1,5 +1,4 @@
 interface AlignmentDialProps {
-  /** Heading the needle points to, in compass degrees (0 = N, 90 = E). */
   heading: number
 }
 
@@ -7,8 +6,6 @@ const CX = 150
 const CY = 150
 const R = 120
 
-/** Compass dial with tick marks, cardinal letters and a green heading needle.
- * Ported from the comp's `_alignDial()`. */
 export function AlignmentDial({ heading }: AlignmentDialProps) {
   const ticks = Array.from({ length: 36 }, (_, i) => {
     const a = ((i * 10) * Math.PI) / 180

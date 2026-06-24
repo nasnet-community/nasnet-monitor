@@ -7,38 +7,24 @@ export interface LineSeries {
   label: string
   data: number[]
   color: string
-  /** Fill a vertical gradient under the line (area chart). */
   area?: boolean
 }
 
 interface LineChartProps {
   series: LineSeries[]
-  /** y-axis maximum; defaults to ~5% above the largest value across series. */
   yMax?: number
-  /** Coordinate-space size of the SVG viewBox. */
   viewWidth?: number
   viewHeight?: number
-  /** Inner padding (coordinate units) reserved for axes. */
   padding?: number
-  /** Horizontal grid line values (also drawn as left-edge labels). */
   gridValues?: number[]
-  /** Labels distributed across the x-axis baseline. */
   xLabels?: string[]
   strokeWidth?: number
-  /** Render at a fixed pixel height, stretching vertically (sparkline style). */
   fixedHeight?: number
-  /** Unit shown after each value in the hover tooltip, e.g. "Mbps". */
   unit?: string
-  /** Tooltip header text for a given data index (e.g. the hour). */
   xTooltip?: (index: number) => string
   className?: string
 }
 
-/**
- * Shared line/area chart used across the app (sparkline, throughput, latency).
- * Responsive SVG with an interactive hover layer: a vertical guide, per-series
- * dots and a value tooltip. Pure SVG + a single pointer handler — no chart lib.
- */
 export function LineChart({
   series,
   yMax,
@@ -73,11 +59,10 @@ export function LineChart({
   const buildLine = (data: number[]) =>
     data.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ')
 
-  // Map a pointer position to the nearest data index.
   const handleMove = (e: ReactPointerEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     if (!rect.width) return
-    const fx = (e.clientX - rect.left) / rect.width // 0..1 in viewBox x
+    const fx = (e.clientX - rect.left) / rect.width
     const vbX = fx * w
     const idx = Math.round(((vbX - pad) / (w - pad * 2)) * (n - 1))
     if (Number.isNaN(idx)) return
@@ -107,10 +92,8 @@ export function LineChart({
           ))}
         </defs>
 
-        {/* transparent capture layer so hover fires across the whole plot */}
         <rect x={0} y={0} width={w} height={h} fill="transparent" pointerEvents="all" />
 
-        {/* horizontal grid + y labels */}
         {gridValues?.map((v) => (
           <g key={v}>
             <line x1={pad} y1={Y(v)} x2={w - pad} y2={Y(v)} stroke="var(--grid)" strokeWidth={1} />
@@ -120,7 +103,6 @@ export function LineChart({
           </g>
         ))}
 
-        {/* x labels */}
         {xLabels?.map((t, i) => (
           <text
             key={t}
@@ -135,8 +117,8 @@ export function LineChart({
           </text>
         ))}
 
-        {/* areas + lines */}
         {series.map((s) => {
+          if (s.data.length < 2) return null
           const line = buildLine(s.data)
           const baseline = fixedHeight ? h : h - pad
           return (
@@ -159,7 +141,6 @@ export function LineChart({
           )
         })}
 
-        {/* hover guide + dots */}
         {hover != null && (
           <g pointerEvents="none">
             <line
@@ -170,22 +151,23 @@ export function LineChart({
               stroke="var(--border-strong)"
               strokeWidth={1}
             />
-            {series.map((s) => (
-              <circle
-                key={s.key}
-                cx={X(hover)}
-                cy={Y(s.data[hover])}
-                r={3.5}
-                fill={s.color}
-                stroke="var(--card)"
-                strokeWidth={2}
-              />
-            ))}
+            {series.map((s) =>
+              s.data[hover] == null ? null : (
+                <circle
+                  key={s.key}
+                  cx={X(hover)}
+                  cy={Y(s.data[hover])}
+                  r={3.5}
+                  fill={s.color}
+                  stroke="var(--card)"
+                  strokeWidth={2}
+                />
+              )
+            )}
           </g>
         )}
       </svg>
 
-      {/* tooltip (HTML overlay) */}
       {hover != null && (
         <div
           className="pointer-events-none absolute top-1 z-10 whitespace-nowrap rounded-md border border-border-strong bg-popover px-2.5 py-2 text-xs shadow-md"

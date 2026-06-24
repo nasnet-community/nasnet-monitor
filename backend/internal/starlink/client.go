@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fullstorydev/grpcurl"
@@ -16,28 +17,22 @@ import (
 
 const defaultCallTimeout = 10 * time.Second
 
-// Client invokes Device RPCs using a pluggable descriptor source provider.
 type Client struct {
 	provider    DescriptorSourceProvider
 	dialOptions []grpc.DialOption
 	timeout     time.Duration
 }
 
-// Option configures a Client.
 type Option func(*Client)
 
-// WithDialOptions overrides the gRPC dial options. Tests use this to inject a
-// bufconn dialer; production uses the default plaintext credentials.
 func WithDialOptions(opts ...grpc.DialOption) Option {
 	return func(c *Client) { c.dialOptions = opts }
 }
 
-// WithTimeout overrides the per-call timeout.
 func WithTimeout(d time.Duration) Option {
 	return func(c *Client) { c.timeout = d }
 }
 
-// NewClient creates a Client that resolves descriptors via the given provider.
 func NewClient(provider DescriptorSourceProvider, opts ...Option) *Client {
 	c := &Client{
 		provider:    provider,
@@ -50,15 +45,29 @@ func NewClient(provider DescriptorSourceProvider, opts ...Option) *Client {
 	return c
 }
 
-// Schema describes a dish's Device service as discovered from its descriptors.
 type Schema struct {
 	Service  string   `json:"service"`
 	Methods  []string `json:"methods"`
 	Requests []string `json:"requests"`
 }
 
-// Invoke calls method (dotted form, e.g. DeviceHandleMethod) on the dish reachable
-// at address, sending reqJSON and returning the response formatted as JSON.
+type MessageInfo struct {
+	Name   string      `json:"name"`
+	Fields []FieldInfo `json:"fields"`
+}
+
+type FieldInfo struct {
+	Name       string       `json:"name"`
+	Number     int32        `json:"number"`
+	Type       string       `json:"type"`
+	Repeated   bool         `json:"repeated,omitempty"`
+	OneOf      string       `json:"oneof,omitempty"`
+	EnumValues []string     `json:"enumValues,omitempty"`
+	Message    *MessageInfo `json:"message,omitempty"`
+}
+
+const maxDescribeDepth = 6
+
 func (c *Client) Invoke(ctx context.Context, address, method string, reqJSON []byte) (json.RawMessage, error) {
 	var out json.RawMessage
 	err := c.withSource(ctx, address, func(callCtx context.Context, conn *grpc.ClientConn, src grpcurl.DescriptorSource) error {
@@ -85,8 +94,6 @@ func (c *Client) Invoke(ctx context.Context, address, method string, reqJSON []b
 	return out, err
 }
 
-// Describe resolves the dish schema and returns the Device service methods and the
-// available Handle request options (the Request message's oneof field names).
 func (c *Client) Describe(ctx context.Context, address string) (*Schema, error) {
 	schema := &Schema{Service: DeviceService}
 	err := c.withSource(ctx, address, func(_ context.Context, _ *grpc.ClientConn, src grpcurl.DescriptorSource) error {
@@ -116,9 +123,80 @@ func (c *Client) Describe(ctx context.Context, address string) (*Schema, error) 
 	return schema, nil
 }
 
-// withSource dials address, builds a descriptor source via the provider, and runs
-// fn with both. It applies the per-call timeout and cleans up the connection and
-// descriptor source.
+func (c *Client) DescribeRequest(ctx context.Context, address, oneof string) (*MessageInfo, error) {
+	var info *MessageInfo
+	err := c.withSource(ctx, address, func(_ context.Context, _ *grpc.ClientConn, src grpcurl.DescriptorSource) error {
+		req, ferr := src.FindSymbol(requestType)
+		if ferr != nil {
+			return fmt.Errorf("find request type: %w", ferr)
+		}
+		md, ok := req.(*desc.MessageDescriptor)
+		if !ok {
+			return fmt.Errorf("%s: not a message descriptor", requestType)
+		}
+		f := md.FindFieldByName(oneof)
+		if f == nil {
+			return fmt.Errorf("unknown request %q", oneof)
+		}
+		mt := f.GetMessageType()
+		if mt == nil {
+			info = &MessageInfo{Name: requestType, Fields: []FieldInfo{fieldInfo(f)}}
+			return nil
+		}
+		info = describeMessage(mt, 0, map[string]bool{mt.GetFullyQualifiedName(): true})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return info, nil
+}
+
+func describeMessage(md *desc.MessageDescriptor, depth int, seen map[string]bool) *MessageInfo {
+	info := &MessageInfo{Name: md.GetFullyQualifiedName()}
+	for _, f := range md.GetFields() {
+		fi := fieldInfo(f)
+		if mt := f.GetMessageType(); mt != nil {
+			name := mt.GetFullyQualifiedName()
+			if depth < maxDescribeDepth && !seen[name] {
+				seen[name] = true
+				fi.Message = describeMessage(mt, depth+1, seen)
+				delete(seen, name)
+			}
+		}
+		info.Fields = append(info.Fields, fi)
+	}
+	return info
+}
+
+func fieldInfo(f *desc.FieldDescriptor) FieldInfo {
+	fi := FieldInfo{
+		Name:     f.GetName(),
+		Number:   f.GetNumber(),
+		Type:     fieldTypeName(f),
+		Repeated: f.IsRepeated(),
+	}
+	if oo := f.GetOneOf(); oo != nil {
+		fi.OneOf = oo.GetName()
+	}
+	if et := f.GetEnumType(); et != nil {
+		for _, v := range et.GetValues() {
+			fi.EnumValues = append(fi.EnumValues, v.GetName())
+		}
+	}
+	return fi
+}
+
+func fieldTypeName(f *desc.FieldDescriptor) string {
+	if mt := f.GetMessageType(); mt != nil {
+		return mt.GetFullyQualifiedName()
+	}
+	if et := f.GetEnumType(); et != nil {
+		return et.GetFullyQualifiedName()
+	}
+	return strings.ToLower(strings.TrimPrefix(f.GetType().String(), "TYPE_"))
+}
+
 func (c *Client) withSource(ctx context.Context, address string, fn func(ctx context.Context, conn *grpc.ClientConn, src grpcurl.DescriptorSource) error) error {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()

@@ -1,24 +1,14 @@
 import type { DeviceState } from '@/data/types'
 
-/** Base off-white the panel/router share. */
 export const PANEL_BASE = 0xf1ebdd
 
-/** Per-state visual parameters for the dish/panel, strip cable and ground link.
- * Ported verbatim from the comp's `_applyState()` map. */
 export interface PanelStateConfig {
-  /** Target X-rotation (radians) the panel pivots to. */
   tilt: number
-  /** Strip/cable color. */
   cable: number
-  /** Strip/cable emissive intensity (also gates visibility when ~0). */
   cableI: number
-  /** Panel emissive color. */
   em: number
-  /** Panel emissive intensity. */
   emI: number
-  /** Panel base-color dim multiplier. */
   dim: number
-  /** Whether the fold-out kickstand is shown. */
   stand: boolean
 }
 
@@ -31,7 +21,6 @@ export const PANEL_STATE: Record<DeviceState, PanelStateConfig> = {
   offline: { tilt: -0.62, cable: 0x222222, cableI: 0.0, em: 0x000000, emI: 0.0, dim: 0.5, stand: true },
 }
 
-/** Companion-router LED color per state. */
 export const LED_HEX: Record<DeviceState, number> = {
   online: 0x22c55e,
   booting: 0xf59e0b,
@@ -41,10 +30,8 @@ export const LED_HEX: Record<DeviceState, number> = {
   offline: 0x52525b,
 }
 
-/** Uplink-beam config per state. */
 export interface BeamStateConfig {
   color: number
-  /** Base opacity. */
   op: number
   show: boolean
   flicker: boolean

@@ -6,8 +6,6 @@ import { HeadingArrow } from '@/components/charts/HeadingArrow'
 import { Sparkline } from '@/components/charts/Sparkline'
 import { Card } from '@/components/ui/card'
 
-// The 3D scene pulls in three.js (~1MB); load it lazily so it doesn't bloat the
-// initial bundle and only downloads when Home is viewed.
 const DeviceScene = lazy(() =>
   import('@/components/three/DeviceScene').then((m) => ({ default: m.DeviceScene }))
 )
@@ -21,7 +19,6 @@ export function HomeScreen() {
   return (
     <div className="flex flex-col gap-[22px]">
       <div className="grid grid-cols-1 items-stretch gap-[22px] lg:grid-cols-[1.55fr_1fr]">
-        {/* Left column: status + 3D hero */}
         <div className="flex flex-col gap-[14px]">
           <Card className="flex items-center gap-[18px] px-[22px] py-[18px]">
             <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
@@ -56,7 +53,6 @@ export function HomeScreen() {
           </div>
         </div>
 
-        {/* Right column: stats */}
         <div className="flex flex-col gap-[14px]">
           <Card className="p-5">
             <div className="text-[12.5px] font-medium uppercase tracking-[0.06em] text-faint">

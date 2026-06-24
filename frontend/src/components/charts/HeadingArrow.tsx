@@ -1,14 +1,9 @@
 const PERSPECTIVE = 'translate(-50%,-50%) perspective(760px) rotateX(66deg)'
 
 interface HeadingArrowProps {
-  /** Heading rotation in degrees about the dial center. */
   headingDeg?: number
 }
 
-/**
- * Green ground-plane heading marker pointing toward best signal, overlaid on the
- * 3D hero. Ported from the comp's `_headingArrow()`.
- */
 export function HeadingArrow({ headingDeg = 38 }: HeadingArrowProps) {
   return (
     <div

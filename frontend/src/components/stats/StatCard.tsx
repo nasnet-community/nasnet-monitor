@@ -16,8 +16,6 @@ const toneClass: Record<NonNullable<StatCardProps['trendTone']>, string> = {
   muted: 'text-faint',
 }
 
-/** A bordered summary tile: uppercase label, large mono value + unit, optional
- * trend line. Used across Statistics / Network / Obstructions / Alignment. */
 export function StatCard({ label, value, unit, trend, trendTone = 'muted', className }: StatCardProps) {
   return (
     <Card className={cn('px-5 py-[18px]', className)}>

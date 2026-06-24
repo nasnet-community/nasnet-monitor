@@ -1,4 +1,3 @@
-// Package config loads and validates runtime configuration from the environment.
 package config
 
 import (
@@ -7,18 +6,14 @@ import (
 	"strconv"
 )
 
-// Config holds runtime configuration.
 type Config struct {
 	Host string
 	Port string
 	Env  string
-	// DishAddress is the fallback Starlink dish gRPC target used when a request
-	// omits the X-Dish-Address header.
+
 	DishAddress string
 }
 
-// Load reads configuration from the environment, applies defaults, and
-// validates the result.
 func Load() (*Config, error) {
 	cfg := &Config{
 		Host:        getEnv("HOST", "0.0.0.0"),

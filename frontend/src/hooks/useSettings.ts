@@ -1,17 +1,25 @@
-import { DEVICE_INFO, NETWORK_SUMMARY } from '@/data/mock'
 import type { AppSettings } from '@/data/types'
 import { useAppStore } from '@/store/appStore'
 
-/** Settings toggles (persisted) plus the static device/network info shown on the
- * Settings screen. */
+import { useLiveTelemetry } from './useLiveTelemetry'
+
 export function useSettings() {
   const settings = useAppStore((s) => s.settings)
   const toggleSetting = useAppStore((s) => s.toggleSetting)
+  const { status } = useLiveTelemetry()
+
+  const info = status?.deviceInfo
+  const device = {
+    model: info?.hardwareVersion ?? '—',
+    serial: info?.id ?? '—',
+    firmware: info?.softwareVersion ?? '—',
+    ssid: '—',
+  }
 
   return {
     settings,
     toggle: (key: keyof AppSettings) => toggleSetting(key),
-    device: DEVICE_INFO,
-    network: NETWORK_SUMMARY,
+    device,
+    network: { networkName: '—', totalThroughput: '—' },
   }
 }

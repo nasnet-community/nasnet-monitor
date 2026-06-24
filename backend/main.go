@@ -1,4 +1,3 @@
-// Package main is the entrypoint for the NASNET-Monitor HTTP API server.
 package main
 
 import (
@@ -16,8 +15,6 @@ import (
 	"nasnet-monitor/internal/server"
 )
 
-// version is the service version, overridable at build time via
-// -ldflags "-X main.version=...".
 var version = "0.1.0"
 
 const shutdownTimeout = 10 * time.Second
@@ -48,7 +45,6 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	// Wait for either a fatal startup error or a shutdown signal.
 	select {
 	case err := <-serverErr:
 		return fmt.Errorf("server error: %w", err)

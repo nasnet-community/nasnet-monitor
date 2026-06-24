@@ -10,7 +10,6 @@ import { Lights } from './Lights'
 import { UplinkBeam } from './UplinkBeam'
 import { BEAM_STATE, LED_HEX, PANEL_STATE } from './deviceStateConfig'
 
-/** All scene geometry under the gently-yawed rig group. */
 function SceneContents() {
   const { deviceState } = useDeviceState()
   const { isDark } = useTheme()
@@ -29,11 +28,6 @@ function SceneContents() {
   )
 }
 
-/**
- * The 3D hero: a react-three-fiber canvas rebuilding the comp's three.js terminal
- * scene (dish, uplink beam, router, link cable) with a fixed framing camera. Fills
- * its positioned parent.
- */
 export function DeviceScene() {
   return (
     <Canvas

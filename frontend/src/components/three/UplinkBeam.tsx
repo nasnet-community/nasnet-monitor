@@ -10,7 +10,6 @@ interface UplinkBeamProps {
   isDark: boolean
 }
 
-/** Build the soft radial-gradient glow texture once (feathered white disc). */
 function useGlowTexture() {
   return useMemo(() => {
     const cv = document.createElement('canvas')
@@ -28,11 +27,6 @@ function useGlowTexture() {
   }, [])
 }
 
-/**
- * Glowing uplink beam rising from the device: additive outer cone + bright core,
- * a camera-facing halo sprite, and rising pulse rings. Color/opacity and the
- * obstructed flicker are driven by device state. Ported from the comp's beam.
- */
 export function UplinkBeam({ config, isDark }: UplinkBeamProps) {
   const glowTex = useGlowTexture()
   const beamMat = useRef<THREE.MeshBasicMaterial>(null)
@@ -41,7 +35,6 @@ export function UplinkBeam({ config, isDark }: UplinkBeamProps) {
 
   const blending = isDark ? THREE.AdditiveBlending : THREE.NormalBlending
 
-  // Base opacities after the dark/light remap; refs so the flicker loop can read them.
   const baseBeamOp = useRef(config.op)
   const baseCoreOp = useRef(0.3)
 
@@ -76,7 +69,6 @@ export function UplinkBeam({ config, isDark }: UplinkBeamProps) {
     }
   }, [config, isDark, blending])
 
-  // Obstructed flicker.
   useFrame(() => {
     if (!config.flicker) return
     const f = 0.45 + 0.55 * Math.abs(Math.sin(performance.now() * 0.013))

@@ -1,6 +1,8 @@
-import { OBSTRUCTION_DATA } from '@/data/mock'
+import { EMPTY_OBSTRUCTION, toObstructionData } from '@/data/starlink'
 
-/** Sky-clarity, outage and obstruction-wedge data for the Obstructions screen. */
+import { useLiveTelemetry } from './useLiveTelemetry'
+
 export function useObstructions() {
-  return OBSTRUCTION_DATA
+  const { status, obstructionMap } = useLiveTelemetry()
+  return status ? toObstructionData(status, obstructionMap) : EMPTY_OBSTRUCTION
 }

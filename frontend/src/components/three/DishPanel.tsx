@@ -8,9 +8,6 @@ interface DishPanelProps {
   config: PanelStateConfig
 }
 
-/** Rounded-rectangle extruded panel, dark back, glowing cable strip, fold-out
- * kickstand and a soft ground shadow. The panel tilts smoothly toward the
- * state's target angle. Ported from the comp's terminal mesh + `_applyState()`. */
 export function DishPanel({ config }: DishPanelProps) {
   const pivot = useRef<THREE.Group>(null)
   const panelMat = useRef<THREE.MeshStandardMaterial>(null)
@@ -21,7 +18,6 @@ export function DishPanel({ config }: DishPanelProps) {
   const pw = 1.66
   const ph = 1.3
 
-  // Extruded rounded-rectangle panel geometry (built once).
   const panelGeo = useMemo(() => {
     const r = 0.13
     const x0 = -pw / 2
@@ -51,7 +47,6 @@ export function DishPanel({ config }: DishPanelProps) {
 
   useEffect(() => () => panelGeo.dispose(), [panelGeo])
 
-  // Apply state-driven material changes.
   useEffect(() => {
     if (panelMat.current) {
       panelMat.current.color.setHex(PANEL_BASE).multiplyScalar(config.dim)
@@ -67,7 +62,6 @@ export function DishPanel({ config }: DishPanelProps) {
     if (kickstand.current) kickstand.current.visible = config.stand
   }, [config])
 
-  // Smoothly lerp the panel tilt toward the target.
   useFrame(() => {
     if (pivot.current) {
       pivot.current.rotation.x += (config.tilt - pivot.current.rotation.x) * 0.07
@@ -77,18 +71,15 @@ export function DishPanel({ config }: DishPanelProps) {
   return (
     <group>
       <group ref={pivot} position={[0, 0.05, 0.34]}>
-        {/* front panel */}
         <mesh geometry={panelGeo}>
           <meshStandardMaterial ref={panelMat} color={PANEL_BASE} roughness={0.6} metalness={0.05} />
         </mesh>
 
-        {/* dark back */}
         <mesh position={[0, ph / 2, -0.085]}>
           <boxGeometry args={[pw * 0.94, ph * 0.94, 0.05]} />
           <meshStandardMaterial color={0x2c2e34} roughness={0.55} metalness={0.3} />
         </mesh>
 
-        {/* glowing cable strip */}
         <mesh ref={strip} position={[0, 0.075, 0.07]}>
           <boxGeometry args={[pw * 0.78, 0.05, 0.03]} />
           <meshStandardMaterial
@@ -100,7 +91,6 @@ export function DishPanel({ config }: DishPanelProps) {
           />
         </mesh>
 
-        {/* fold-out kickstand */}
         <group ref={kickstand} position={[0, 0.09, -0.07]} rotation={[0.52, 0, 0]}>
           <mesh position={[0, 0, -0.3]}>
             <boxGeometry args={[0.5, 0.05, 0.66]} />
@@ -113,7 +103,6 @@ export function DishPanel({ config }: DishPanelProps) {
         </group>
       </group>
 
-      {/* ground shadow */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <circleGeometry args={[1.35, 40]} />
         <meshBasicMaterial color={0x000000} transparent opacity={0.42} />

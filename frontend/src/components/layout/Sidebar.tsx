@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom'
 
 import { NAV_ITEMS } from '@/constants/navigation'
-import { DEVICE_INFO } from '@/data/mock'
 import { useDeviceState } from '@/hooks/useDeviceState'
+import { useSettings } from '@/hooks/useSettings'
 import { cn } from '@/lib/utils'
 
-/** Brand mark — the Nasnet logo from /public/assets beside the wordmark. */
 function BrandMark() {
   return (
     <div className="flex items-center gap-[11px] px-2 pb-5 pt-1.5 max-md:hidden">
@@ -25,9 +24,9 @@ function BrandMark() {
   )
 }
 
-/** Bottom device card showing the live status dot + kit identity. */
 function DeviceCard() {
   const { meta } = useDeviceState()
+  const { device } = useSettings()
   return (
     <div className="rounded-[13px] border border-border bg-card px-[14px] py-[13px] max-md:hidden">
       <div className="flex items-center gap-[9px]">
@@ -35,9 +34,9 @@ function DeviceCard() {
           className="h-2 w-2 animate-nas-pulse rounded-full"
           style={{ background: meta.color, boxShadow: `0 0 10px ${meta.color}` }}
         />
-        <span className="text-[13px] font-semibold">{DEVICE_INFO.model}</span>
+        <span className="text-[13px] font-semibold">{device.model}</span>
       </div>
-      <div className="mt-[5px] font-mono-nums text-[11.5px] text-faint">SN&nbsp;{DEVICE_INFO.serial}</div>
+      <div className="mt-[5px] font-mono-nums text-[11.5px] text-faint">SN&nbsp;{device.serial}</div>
     </div>
   )
 }
@@ -48,7 +47,6 @@ export function Sidebar() {
       className={cn(
         'flex shrink-0 flex-col gap-1.5 border-r border-border bg-surface',
         'w-[248px] px-4 py-[22px] md:h-screen md:overflow-y-auto',
-        // responsive: horizontal icon bar on narrow screens
         'max-md:w-full max-md:flex-row max-md:items-center max-md:gap-1 max-md:overflow-x-auto max-md:border-b max-md:border-r-0 max-md:px-3 max-md:py-2.5'
       )}
     >

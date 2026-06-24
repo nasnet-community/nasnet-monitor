@@ -8,7 +8,20 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
+
+func TestClassifyDishError_FailedPrecondition(t *testing.T) {
+	err := status.Error(codes.FailedPrecondition, "Wifi has already been set up")
+	httpStatus, message := classifyDishError(err)
+	if httpStatus != http.StatusConflict {
+		t.Errorf("status = %d, want %d", httpStatus, http.StatusConflict)
+	}
+	if !strings.Contains(message, "Wifi has already been set up") {
+		t.Errorf("message %q should surface the device reason", message)
+	}
+}
 
 func newJSONContext(method, target, body string) (*httptest.ResponseRecorder, echo.Context) {
 	e := echo.New()

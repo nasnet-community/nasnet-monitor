@@ -1,11 +1,17 @@
-import { DEVICES, NETWORK_SUMMARY } from '@/data/mock'
+import { toNetworkDevices, toNetworkNode } from '@/data/starlink'
 
-/** Connected client devices + network summary for the Network screen. */
+import { useLiveTelemetry } from './useLiveTelemetry'
+
 export function useDevices() {
+  const { status, clients, clientIndex, clientsError } = useLiveTelemetry()
+  const devices = toNetworkDevices(clients, clientIndex)
+  const node = toNetworkNode(status, devices.length)
+
   return {
-    devices: DEVICES,
-    deviceCount: DEVICES.length,
-    networkName: NETWORK_SUMMARY.networkName,
-    totalThroughput: NETWORK_SUMMARY.totalThroughput,
+    devices,
+    deviceCount: devices.length,
+    node,
+    nodeCount: 1,
+    clientsError,
   }
 }

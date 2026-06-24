@@ -8,16 +8,10 @@ interface GroundCableProps {
   isDark: boolean
 }
 
-/**
- * Glowing link cable laid flat between the router base and the dish base.
- * depthTest lets the router/dish occlude it so it reads as running underneath.
- * Ported from the comp's ground-cable meshes + `_applyState()` color logic.
- */
 export function GroundCable({ cableColor, cableI, ledColor, isDark }: GroundCableProps) {
   const mainMat = useRef<THREE.MeshBasicMaterial>(null)
   const glowMat = useRef<THREE.MeshBasicMaterial>(null)
 
-  // Endpoint geometry (router base → device base), computed once.
   const { len, mid, rotY } = useMemo(() => {
     const a = new THREE.Vector3(-1.66, 0.03, 0.66)
     const b = new THREE.Vector3(-0.06, 0.03, 0.22)
@@ -29,7 +23,6 @@ export function GroundCable({ cableColor, cableI, ledColor, isDark }: GroundCabl
 
   const visible = cableI > 0.01
   const blending = isDark ? THREE.AdditiveBlending : THREE.NormalBlending
-  // White additive is invisible on light backgrounds, so use the accent color there.
   const col = isDark ? cableColor : ledColor
 
   useEffect(() => {

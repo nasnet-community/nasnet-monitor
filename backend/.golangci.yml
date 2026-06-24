@@ -13,7 +13,6 @@ linters:
     - errorlint
     - gochecknoinits
     - gocritic
-    - godot
     - gosec
     - misspell
     - nakedret
@@ -34,12 +33,10 @@ linters:
         - name: error-return
         - name: error-strings
         - name: error-naming
-        - name: exported
         - name: if-return
         - name: increment-decrement
         - name: var-naming
         - name: var-declaration
-        - name: package-comments
         - name: range
         - name: receiver-naming
         - name: time-naming
@@ -67,10 +64,6 @@ linters:
         - performance
       disabled-checks:
         - hugeParam
-    godot:
-      scope: declarations
-      period: true
-      capital: true
     nakedret:
       max-func-lines: 30
     gosec:
