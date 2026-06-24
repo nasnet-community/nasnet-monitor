@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  [data-theme='dark'] {
+    --bg: #08080a;
+    --surface: #0a0a0c;
+    --card: #101013;
+    --card2: #16161b;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.13);
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+    --faint: #71717a;
+    --nav-active: rgba(255, 255, 255, 0.07);
+    --track: rgba(255, 255, 255, 0.07);
+    --grid: rgba(255, 255, 255, 0.06);
+    --accent: #22c55e;
+
+    --hero-bg: radial-gradient(120% 90% at 50% 18%, #1a1a1f 0%, #0c0c0f 55%, #08080a 100%);
+
+    --status-online: #22c55e;
+    --status-warn: #f59e0b;
+    --status-danger: #ef4444;
+    --status-idle: #a1a1aa;
+
+    --background: var(--bg);
+    --foreground: var(--text);
+    --card-foreground: var(--text);
+    --popover: var(--surface);
+    --popover-foreground: var(--text);
+    --primary: var(--accent);
+    --primary-foreground: #06210f;
+    --secondary: var(--card2);
+    --secondary-foreground: var(--text);
+    --muted-foreground: var(--muted);
+    --accent-foreground: var(--text);
+    --destructive: var(--status-danger);
+    --destructive-foreground: #fef2f2;
+    --input: var(--border-strong);
+    --ring: var(--accent);
+    --radius: 0.85rem;
+  }
+
+  [data-theme='light'] {
+    --bg: #f0f0f2;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --card2: #f4f4f6;
+    --border: rgba(0, 0, 0, 0.09);
+    --border-strong: rgba(0, 0, 0, 0.16);
+    --text: #18181b;
+    --muted: #52525b;
+    --faint: #8b8b94;
+    --nav-active: rgba(0, 0, 0, 0.05);
+    --track: rgba(0, 0, 0, 0.08);
+    --grid: rgba(0, 0, 0, 0.07);
+    --accent: #16a34a;
+
+    --hero-bg: radial-gradient(120% 90% at 50% 14%, #ffffff 0%, #eef1f5 52%, #e1e5ec 100%);
+
+    --status-online: #16a34a;
+    --status-warn: #f59e0b;
+    --status-danger: #ef4444;
+    --status-idle: #71717a;
+
+    --primary-foreground: #f0fdf4;
+    --destructive-foreground: #fef2f2;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.28);
+    border-radius: 8px;
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  .font-mono-nums {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
