@@ -6,18 +6,13 @@ import { useLiveTelemetry } from '@/hooks/useLiveTelemetry'
 import { useSpeedtest, type SpeedtestMode } from '@/hooks/useSpeedtest'
 import { cn } from '@/lib/utils'
 
-const MODE_COPY: Record<SpeedtestMode, string> = {
-  router: 'Local speed between this device and your Nasnet router',
-  internet: 'Full path through your Nasnet kit out to the internet',
-}
-
 function usePathDetail(mode: SpeedtestMode, live: boolean) {
   const { status } = useLiveTelemetry()
   if (mode === 'router') {
-    return { source: live ? 'Reported to router' : 'Simulated', server: 'Nasnet-Home', loss: '0.0%' }
+    return { source: live ? 'Router' : 'Simulated', server: 'Nasnet-Home', loss: '0.0%' }
   }
   return {
-    source: live ? 'Live router test' : 'Simulated',
+    source: live ? 'Live test' : 'Simulated',
     server: 'Starlink PoP',
     loss: status?.popPingDropRate != null ? `${(status.popPingDropRate * 100).toFixed(1)}%` : '—',
   }
@@ -29,14 +24,14 @@ function SegmentedToggle({ mode, onChange }: { mode: SpeedtestMode; onChange: (m
     { id: 'internet', label: 'Device to Internet' },
   ]
   return (
-    <div className="inline-flex rounded-full bg-card2 p-1">
+    <div className="inline-flex rounded-full bg-card2 p-0.5">
       {opts.map((o) => (
         <button
           key={o.id}
           type="button"
           onClick={() => onChange(o.id)}
           className={cn(
-            'rounded-full px-6 py-2 text-[14px] font-semibold transition-colors',
+            'rounded-full px-4 py-1.5 text-[15px] font-semibold transition-colors md:text-[14px]',
             mode === o.id ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'
           )}
         >
@@ -63,7 +58,7 @@ function Dial({ value, unit, icon: Icon }: { value: number; unit: string; icon: 
 
 function Readout({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex min-w-0 flex-col items-center">
+    <div className="flex min-w-0 flex-1 flex-col items-center">
       <div className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-faint">{label}</div>
       <div className="mt-1.5 truncate text-[14px] font-semibold">{value}</div>
     </div>
@@ -91,13 +86,10 @@ export function SpeedTestScreen() {
         : 'Start'
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-[560px] flex-col items-center gap-7 py-2">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <SegmentedToggle mode={mode} onChange={changeMode} />
-        <p className="text-[12.5px] text-faint">{MODE_COPY[mode]}</p>
-      </div>
+    <div className="mx-auto flex h-full w-full flex-col items-center justify-center gap-5 overflow-hidden py-1">
+      <SegmentedToggle mode={mode} onChange={changeMode} />
 
-      <div className="relative h-[300px] w-full">
+      <div className="relative h-[clamp(200px,38vh,320px)] w-full">
         <SpeedTestScene running={running} />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 text-center text-[14px] font-semibold tracking-[0.45em] text-muted-foreground">
           NASNET
@@ -123,7 +115,7 @@ export function SpeedTestScreen() {
         <p className="max-w-[420px] text-center text-[13px] text-status-warn">{errorMsg}</p>
       )}
 
-      <div className="flex w-full max-w-[420px] items-start justify-center gap-12">
+      <div className="flex w-full max-w-[420px] items-start gap-4">
         <Readout label="Source" value={detail.source} />
         <Readout label="Server" value={detail.server} />
         <Readout label="Packet loss" value={detail.loss} />
