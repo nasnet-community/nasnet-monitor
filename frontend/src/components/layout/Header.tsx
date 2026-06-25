@@ -1,14 +1,16 @@
-import { Bell, ChevronRight, LogOut } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Bell, ChevronRight, LogOut, Menu } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { causeTone, formatDuration, formatWhen } from '@/components/stats/outageFormat'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { NAV_ITEMS } from '@/constants/navigation'
+import { NAV_ITEMS, type NavItem } from '@/constants/navigation'
 import { useDeviceState } from '@/hooks/useDeviceState'
 import { useStats } from '@/hooks/useStats'
 import { cn } from '@/lib/utils'
@@ -22,6 +24,40 @@ function useActiveNav() {
   )
 }
 
+function MobileNav({ active }: { active: NavItem }) {
+  const navigate = useNavigate()
+  const disconnect = useAppStore((s) => s.disconnect)
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          title="Menu"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-strong bg-card2 text-muted-foreground transition-colors hover:text-foreground data-[state=open]:text-foreground md:hidden"
+        >
+          <Menu className="h-[18px] w-[18px]" strokeWidth={1.8} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[210px]">
+        {NAV_ITEMS.map(({ id, label, path, icon: Icon }) => (
+          <DropdownMenuItem
+            key={id}
+            onSelect={() => navigate(path)}
+            className={cn(active.id === id && 'bg-[var(--nav-active)] text-foreground')}
+          >
+            <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
+            {label}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => disconnect()}>
+          <LogOut className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
+          Exit
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function Header() {
   const active = useActiveNav()
   const navigate = useNavigate()
@@ -31,15 +67,33 @@ export function Header() {
   const recent = events.slice(0, 5)
 
   return (
-    <header className="flex items-center justify-between border-b border-border px-5 py-[18px] md:px-[30px]">
-      <span className="text-xl font-semibold tracking-[-0.02em]">{active.title}</span>
+    <header className="relative flex items-center justify-between gap-3 border-b border-border px-5 py-2 md:px-[30px] md:py-[18px]">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <Link to="/" aria-label="Home" className="shrink-0 md:hidden">
+          <img
+            src="/assets/logo.png"
+            alt="Nasnet logo"
+            width={30}
+            height={30}
+            className="h-[30px] w-[30px] rounded-[8px] object-contain"
+            style={{ boxShadow: '0 0 14px rgba(34,197,94,0.3)' }}
+          />
+        </Link>
+        <span className="hidden truncate text-xl font-semibold tracking-[-0.02em] md:block">
+          {active.title}
+        </span>
+      </div>
 
-      <div className="flex items-center gap-3">
+      <span className="pointer-events-none absolute left-1/2 max-w-[52%] -translate-x-1/2 truncate text-base font-semibold tracking-[-0.02em] md:hidden">
+        {active.title}
+      </span>
+
+      <div className="flex shrink-0 items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               title="Alerts"
-              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border-strong bg-card2 text-muted-foreground transition-colors hover:text-foreground data-[state=open]:text-foreground"
+              className="relative hidden h-9 w-9 items-center justify-center rounded-full border border-border-strong bg-card2 text-muted-foreground transition-colors hover:text-foreground data-[state=open]:text-foreground md:flex"
             >
               <Bell className="h-[17px] w-[17px]" strokeWidth={1.8} />
               {events.length > 0 && (
@@ -84,9 +138,30 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              title="Live device state"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong bg-card text-foreground transition-colors hover:text-foreground md:hidden"
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: meta.color, boxShadow: `0 0 9px ${meta.color}` }}
+              />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="flex min-w-0 items-center gap-2 px-3 py-2">
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ background: meta.color, boxShadow: `0 0 9px ${meta.color}` }}
+            />
+            <span className="text-[13px] font-medium">{meta.label}</span>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <div
           title="Live device state"
-          className="flex items-center gap-2 rounded-full border border-border-strong bg-card py-[7px] pl-[13px] pr-[14px] text-foreground"
+          className="hidden items-center gap-2 rounded-full border border-border-strong bg-card py-[7px] pl-[13px] pr-[14px] text-foreground md:flex"
         >
           <span
             className="h-2 w-2 rounded-full"
@@ -98,10 +173,12 @@ export function Header() {
         <button
           onClick={() => disconnect()}
           title="Exit"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong bg-card2 text-muted-foreground transition-colors hover:text-foreground"
+          className="hidden h-9 w-9 items-center justify-center rounded-full border border-border-strong bg-card2 text-muted-foreground transition-colors hover:text-foreground md:flex"
         >
           <LogOut className="h-[18px] w-[18px]" strokeWidth={1.8} />
         </button>
+
+        <MobileNav active={active} />
       </div>
     </header>
   )

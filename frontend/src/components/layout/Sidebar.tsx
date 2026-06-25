@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 
 function BrandMark() {
   return (
-    <div className="flex items-center gap-[11px] px-2 pb-5 pt-1.5 max-md:hidden">
+    <div className="flex items-center gap-[11px] px-2 pb-5 pt-1.5">
       <img
         src="/assets/logo.png"
         alt="Nasnet logo"
@@ -28,7 +28,7 @@ function DeviceCard() {
   const { meta } = useDeviceState()
   const { device } = useSettings()
   return (
-    <div className="rounded-[13px] border border-border bg-card px-[14px] py-[13px] max-md:hidden">
+    <div className="rounded-[13px] border border-border bg-card px-[14px] py-[13px]">
       <div className="flex items-center gap-[9px]">
         <span
           className="h-2 w-2 animate-nas-pulse rounded-full"
@@ -43,13 +43,7 @@ function DeviceCard() {
 
 export function Sidebar() {
   return (
-    <aside
-      className={cn(
-        'flex shrink-0 flex-col gap-1.5 border-r border-border bg-surface',
-        'w-[248px] px-4 py-[22px] md:h-screen md:overflow-y-auto',
-        'max-md:w-full max-md:flex-row max-md:items-center max-md:gap-1 max-md:overflow-x-auto max-md:border-b max-md:border-r-0 max-md:px-3 max-md:py-2.5'
-      )}
-    >
+    <aside className="hidden w-[248px] shrink-0 flex-col gap-1.5 border-r border-border bg-surface px-4 py-[22px] md:flex md:h-screen md:overflow-y-auto">
       <BrandMark />
 
       {NAV_ITEMS.map(({ id, label, path, icon: Icon }) => (
@@ -60,7 +54,6 @@ export function Sidebar() {
           className={({ isActive }) =>
             cn(
               'flex w-full items-center gap-3 rounded-[11px] px-[13px] py-[11px] text-sm font-medium transition-colors',
-              'max-md:w-auto max-md:flex-col max-md:gap-1 max-md:px-3 max-md:py-2',
               isActive
                 ? 'bg-[var(--nav-active)] text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -68,11 +61,11 @@ export function Sidebar() {
           }
         >
           <Icon className="h-[19px] w-[19px] shrink-0" strokeWidth={1.8} />
-          <span className="max-md:hidden">{label}</span>
+          <span>{label}</span>
         </NavLink>
       ))}
 
-      <div className="flex-1 max-md:hidden" />
+      <div className="flex-1" />
       <DeviceCard />
     </aside>
   )
