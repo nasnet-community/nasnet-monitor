@@ -1,14 +1,15 @@
-import { Bell, ChevronRight, LogOut } from 'lucide-react'
+import { Bell, ChevronRight, LogOut, Menu } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { causeTone, formatDuration, formatWhen } from '@/components/stats/outageFormat'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { NAV_ITEMS } from '@/constants/navigation'
+import { NAV_ITEMS, type NavItem } from '@/constants/navigation'
 import { useDeviceState } from '@/hooks/useDeviceState'
 import { useStats } from '@/hooks/useStats'
 import { cn } from '@/lib/utils'
@@ -22,6 +23,34 @@ function useActiveNav() {
   )
 }
 
+function MobileNav({ active }: { active: NavItem }) {
+  const navigate = useNavigate()
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          title="Menu"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-strong bg-card2 text-muted-foreground transition-colors hover:text-foreground data-[state=open]:text-foreground md:hidden"
+        >
+          <Menu className="h-[18px] w-[18px]" strokeWidth={1.8} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-[210px]">
+        {NAV_ITEMS.map(({ id, label, path, icon: Icon }) => (
+          <DropdownMenuItem
+            key={id}
+            onSelect={() => navigate(path)}
+            className={cn(active.id === id && 'bg-[var(--nav-active)] text-foreground')}
+          >
+            <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
+            {label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function Header() {
   const active = useActiveNav()
   const navigate = useNavigate()
@@ -31,10 +60,13 @@ export function Header() {
   const recent = events.slice(0, 5)
 
   return (
-    <header className="flex items-center justify-between border-b border-border px-5 py-[18px] md:px-[30px]">
-      <span className="text-xl font-semibold tracking-[-0.02em]">{active.title}</span>
+    <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-[18px] md:px-[30px]">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <MobileNav active={active} />
+        <span className="truncate text-xl font-semibold tracking-[-0.02em]">{active.title}</span>
+      </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
