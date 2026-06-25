@@ -1,5 +1,5 @@
 import { Bell, ChevronRight, LogOut, Menu } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { causeTone, formatDuration, formatWhen } from '@/components/stats/outageFormat'
 import {
@@ -69,14 +69,16 @@ export function Header() {
   return (
     <header className="relative flex items-center justify-between gap-3 border-b border-border px-5 py-2 md:px-[30px] md:py-[18px]">
       <div className="flex min-w-0 items-center gap-2.5">
-        <img
-          src="/assets/logo.png"
-          alt="Nasnet logo"
-          width={30}
-          height={30}
-          className="h-[30px] w-[30px] shrink-0 rounded-[8px] object-contain md:hidden"
-          style={{ boxShadow: '0 0 14px rgba(34,197,94,0.3)' }}
-        />
+        <Link to="/" aria-label="Home" className="shrink-0 md:hidden">
+          <img
+            src="/assets/logo.png"
+            alt="Nasnet logo"
+            width={30}
+            height={30}
+            className="h-[30px] w-[30px] rounded-[8px] object-contain"
+            style={{ boxShadow: '0 0 14px rgba(34,197,94,0.3)' }}
+          />
+        </Link>
         <span className="hidden truncate text-xl font-semibold tracking-[-0.02em] md:block">
           {active.title}
         </span>
