@@ -136,15 +136,26 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div
-          title="Live device state"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong bg-card text-foreground md:hidden"
-        >
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ background: meta.color, boxShadow: `0 0 9px ${meta.color}` }}
-          />
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              title="Live device state"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong bg-card text-foreground transition-colors hover:text-foreground md:hidden"
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: meta.color, boxShadow: `0 0 9px ${meta.color}` }}
+              />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="flex min-w-0 items-center gap-2 px-3 py-2">
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ background: meta.color, boxShadow: `0 0 9px ${meta.color}` }}
+            />
+            <span className="text-[13px] font-medium">{meta.label}</span>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <div
           title="Live device state"
