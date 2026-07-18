@@ -1,0 +1,132 @@
+name: Snapshot Docker image
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: snapshot-main
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ghcr.io/nasnet-community/nasnet-monitor
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            suffix: amd64
+          - platform: linux/arm64
+            suffix: arm64
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/setup-qemu-action@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: true
+          provenance: false
+          sbom: false
+          build-args: |
+            VERSION=main-${{ github.sha }}
+          tags: ${{ env.IMAGE }}:main-${{ matrix.suffix }}
+          cache-from: type=gha,scope=${{ matrix.suffix }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.suffix }}
+
+      - name: Report image size
+        run: |
+          set -euo pipefail
+          FIRST_TAG="${{ env.IMAGE }}:main-${{ matrix.suffix }}"
+          SIZE_BYTES=$(docker buildx imagetools inspect "$FIRST_TAG" --raw \
+            | jq '[.layers[].size] | add')
+          SIZE_MB=$(awk "BEGIN { printf \"%.2f\", $SIZE_BYTES / 1048576 }")
+          echo "Image $FIRST_TAG compressed size: ${SIZE_MB} MB"
+          echo "- ${{ matrix.suffix }}: **${SIZE_MB} MB**" >> "$GITHUB_STEP_SUMMARY"
+
+  manifest:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-arch manifests
+        run: |
+          set -euo pipefail
+          SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          for TAG in main "main-${SHA}"; do
+            echo "-> ${IMAGE}:${TAG}"
+            docker buildx imagetools create --tag "${IMAGE}:${TAG}" \
+              "${IMAGE}:main-amd64" \
+              "${IMAGE}:main-arm64"
+          done
+
+  package:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - name: Install skopeo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y skopeo
+
+      - name: Log in to ${{ env.REGISTRY }}
+        run: skopeo login "${{ env.REGISTRY }}" -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Package per-arch container image tars
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          for SUFFIX in amd64 arm64; do
+            REF="${IMAGE}:main-${SUFFIX}"
+            OUT="nasnet-monitor-main-${SUFFIX}.tar"
+            echo "-> ${REF} => dist/${OUT}"
+            skopeo copy "docker://${REF}" "docker-archive:dist/${OUT}:nasnet-monitor:main-${SUFFIX}"
+            ( cd dist && sha256sum "${OUT}" > "${OUT}.sha256" )
+          done
+
+      - name: Publish to rolling snapshot release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: snapshot
+          name: Main snapshot
+          prerelease: true
+          body: |
+            Rolling snapshot, rebuilt on every push to `main`.
+            Commit ${{ github.sha }}.
+
+            Container image tars (`docker load` / RouterOS container import):
+            - `nasnet-monitor-main-amd64.tar` (x86_64)
+            - `nasnet-monitor-main-arm64.tar` (arm64 — MikroTik hAP ax2)
+          files: |
+            dist/*.tar
+            dist/*.tar.sha256
