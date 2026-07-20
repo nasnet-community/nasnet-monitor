@@ -36,10 +36,10 @@ export function CompassOverlay() {
 
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[64%] z-[1] h-[460px] w-[460px]"
+      className="pointer-events-none absolute left-1/2 top-[64%] z-[1] h-[min(88vw,460px)] w-[min(88vw,460px)]"
       style={{ transform: PERSPECTIVE }}
     >
-      <svg viewBox="0 0 400 400" width={460} height={460}>
+      <svg viewBox="0 0 400 400" width="100%" height="100%">
         {ticks}
         {letters.map(([t, x, y]) => (
           <text

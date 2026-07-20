@@ -47,10 +47,12 @@ function FieldRows({ rows }: { rows: Row[] }) {
       {rows.map((row) => (
         <div
           key={row.label}
-          className="flex items-baseline justify-between gap-4 border-b border-border/60 pb-[10px]"
+          className="flex min-w-0 items-baseline justify-between gap-4 border-b border-border/60 pb-[10px]"
         >
           <dt className="text-[13px] text-muted-foreground">{row.label}</dt>
-          <dd className="text-right font-mono-nums text-[13px] font-medium">{row.value}</dd>
+          <dd className="min-w-0 break-words text-right font-mono-nums text-[13px] font-medium">
+            {row.value}
+          </dd>
         </div>
       ))}
     </dl>
@@ -111,7 +113,7 @@ export function DiagnosticsScreen() {
           : 'Live diagnostics — auto-refreshing every 15 seconds.'}
       </div>
 
-      <Card className="px-6 py-[22px]">
+      <Card className="px-5 py-[18px] sm:px-6 sm:py-[22px]">
         <div className="mb-[18px] text-[15px] font-semibold">Diagnostic snapshot</div>
         {rows.length > 0 ? (
           <FieldRows rows={rows} />
@@ -122,7 +124,7 @@ export function DiagnosticsScreen() {
         )}
       </Card>
 
-      <Card className="px-6 py-[22px]">
+      <Card className="px-5 py-[18px] sm:px-6 sm:py-[22px]">
         <div className="text-[15px] font-semibold">Transceiver telemetry</div>
         <div className="mb-[18px] mt-1 text-[12.5px] text-faint">
           Per-band radio RX/TX, thermal and antenna stats from the router.

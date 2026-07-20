@@ -26,7 +26,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-[380px] rounded-[16px] border border-border bg-card p-6 text-foreground shadow-2xl"
+        className="relative z-10 max-h-[calc(100dvh-40px)] w-full max-w-[380px] overflow-y-auto rounded-[16px] border border-border bg-card p-5 text-foreground shadow-2xl sm:p-6"
       >
         <div className="text-[16px] font-semibold tracking-[-0.01em]">{title}</div>
         <div className="mt-4">{children}</div>

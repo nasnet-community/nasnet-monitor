@@ -11,7 +11,9 @@ const AlignmentScene = lazy(() =>
 function Readout({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div className="flex min-w-0 flex-col items-center">
-      <div className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-faint">{label}</div>
+      <div className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-faint">
+        {label}
+      </div>
       <div className="mt-1.5 font-mono-nums text-[24px] font-semibold leading-none">{value}</div>
       <div className="mt-1.5 truncate text-[11.5px] text-faint">{sub}</div>
     </div>
@@ -48,7 +50,7 @@ export function AlignmentScreen() {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[680px] flex-col items-center justify-center gap-7 py-6 text-center">
       <div>
-        <h2 className="flex items-center justify-center gap-2 text-[26px] font-semibold tracking-[-0.01em]">
+        <h2 className="flex items-center justify-center gap-2 text-[23px] font-semibold tracking-[-0.01em] sm:text-[26px]">
           {aligned && <CheckCircle2 className="h-6 w-6 text-green-500" aria-hidden />}
           {heading}
         </h2>
@@ -57,7 +59,7 @@ export function AlignmentScreen() {
         </p>
       </div>
 
-      <div className="relative h-[420px] w-full">
+      <div className="relative h-[clamp(300px,45vh,420px)] w-full">
         <Suspense fallback={null}>
           <AlignmentScene
             aligned={aligned}
@@ -69,7 +71,7 @@ export function AlignmentScreen() {
         </Suspense>
       </div>
 
-      <div className="flex items-start justify-center gap-12">
+      <div className="flex items-start justify-center gap-8 sm:gap-12">
         <Readout label="Azimuth" value={searching ? '—' : `${azimuthDeg}°`} sub={azimuthLabel} />
         <Readout
           label="Elevation"
