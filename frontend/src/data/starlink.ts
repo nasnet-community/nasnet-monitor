@@ -181,9 +181,12 @@ export function dishDisabledReason(s: StarlinkStatus | null): string | null {
   return DISABLEMENT_LABELS[key] ?? pretty.charAt(0).toUpperCase() + pretty.slice(1)
 }
 
-export function deriveDeviceState(s: StarlinkStatus | null): DeviceState {
+// `rfInhibited` is the locally tracked toggle state — the dish exposes no
+// readback for RF inhibit, so it can only come from the app store.
+export function deriveDeviceState(s: StarlinkStatus | null, rfInhibited = false): DeviceState {
   if (!s) return 'offline'
   if (s.stowRequested) return 'stowed'
+  if (rfInhibited) return 'rfOff'
   if (s.obstructionStats?.currentlyObstructed) return 'obstructed'
   if (s.alerts?.isPowerSaveIdle) return 'sleeping'
   const dl = s.downlinkThroughputBps ?? 0

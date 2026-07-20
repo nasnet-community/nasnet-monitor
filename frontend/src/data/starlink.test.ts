@@ -40,6 +40,14 @@ describe('deriveDeviceState', () => {
     expect(deriveDeviceState(online)).toBe('online')
     expect(deriveDeviceState({})).toBe('booting')
   })
+
+  it('reports rfOff from the locally tracked inhibit flag', () => {
+    expect(deriveDeviceState(online, true)).toBe('rfOff')
+    expect(deriveDeviceState({}, true)).toBe('rfOff')
+    // Physical stow and unreachable dish still win over the local flag.
+    expect(deriveDeviceState({ stowRequested: true }, true)).toBe('stowed')
+    expect(deriveDeviceState(null, true)).toBe('offline')
+  })
 })
 
 describe('toLiveStats', () => {

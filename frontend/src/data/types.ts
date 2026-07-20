@@ -3,6 +3,7 @@ export type DeviceState =
   | 'booting'
   | 'sleeping'
   | 'stowed'
+  | 'rfOff'
   | 'obstructed'
   | 'offline'
 
