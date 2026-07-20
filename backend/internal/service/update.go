@@ -18,8 +18,6 @@ const (
 	updateFetchLimit  = 10 * time.Second
 )
 
-// UpdateCheck is the result of comparing the running version against the
-// latest published release.
 type UpdateCheck struct {
 	CurrentVersion  string `json:"currentVersion"`
 	LatestVersion   string `json:"latestVersion,omitempty"`
@@ -27,7 +25,6 @@ type UpdateCheck struct {
 	ReleaseURL      string `json:"releaseUrl,omitempty"`
 }
 
-// UpdateService checks GitHub for a newer released version of the app.
 type UpdateService struct {
 	version    string
 	releaseURL string
@@ -38,8 +35,6 @@ type UpdateService struct {
 	fetchedAt time.Time
 }
 
-// NewUpdateService returns an UpdateService that compares version against the
-// latest GitHub release.
 func NewUpdateService(version string) *UpdateService {
 	return &UpdateService{
 		version:    version,
@@ -48,8 +43,6 @@ func NewUpdateService(version string) *UpdateService {
 	}
 }
 
-// Check returns the latest release info, fetching from GitHub at most once per
-// cache period.
 func (s *UpdateService) Check(ctx context.Context) (*UpdateCheck, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -107,8 +100,6 @@ func (s *UpdateService) fetch(ctx context.Context) (*UpdateCheck, error) {
 	}, nil
 }
 
-// newerVersion reports whether latest is a valid semver strictly newer than
-// current.
 func newerVersion(current, latest string) bool {
 	c, l := "v"+current, "v"+latest
 	if !semver.IsValid(c) || !semver.IsValid(l) {
