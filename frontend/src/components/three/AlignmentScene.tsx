@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Line, OrbitControls, Text } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -75,13 +75,7 @@ function DishAssembly({
   return (
     <group position={[0, 2.0, 0]} rotation={[0, NORTH_AZIMUTH, 0]}>
       <group rotation={[ELEV_TILT, 0, 0]}>
-        <Line
-          points={outlinePoints}
-          color="#8a8a92"
-          transparent
-          opacity={0.6}
-          lineWidth={1.4}
-        />
+        <Line points={outlinePoints} color="#8a8a92" transparent opacity={0.6} lineWidth={1.4} />
       </group>
 
       <group ref={yaw}>
@@ -213,11 +207,21 @@ function RotationArrow({ direction }: { direction: 'cw' | 'ccw' }) {
   return (
     <group>
       <mesh geometry={tubeGeo}>
-        <meshStandardMaterial color={0xffffff} emissive={0xffffff} emissiveIntensity={0.18} roughness={0.4} />
+        <meshStandardMaterial
+          color={0xffffff}
+          emissive={0xffffff}
+          emissiveIntensity={0.18}
+          roughness={0.4}
+        />
       </mesh>
       <mesh position={headPos} quaternion={headQuat}>
         <coneGeometry args={[0.14, 0.34, 18]} />
-        <meshStandardMaterial color={0xffffff} emissive={0xffffff} emissiveIntensity={0.18} roughness={0.4} />
+        <meshStandardMaterial
+          color={0xffffff}
+          emissive={0xffffff}
+          emissiveIntensity={0.18}
+          roughness={0.4}
+        />
       </mesh>
     </group>
   )
@@ -248,6 +252,26 @@ interface AlignmentSceneProps {
   spec?: DishModelSpec
 }
 
+const CAMERA_FOV = 28
+const CAMERA_TARGET = new THREE.Vector3(0, 0.55, 0)
+// Widest scene content: the rotation arrow (RING_RADIUS + 0.55) plus its cone head.
+const SCENE_HALF_WIDTH = 2.9
+
+// The FOV is vertical, so on narrow (portrait) canvases the horizontal view
+// shrinks and the compass ring gets clipped; zoom out just enough to keep it framed.
+function FitCamera() {
+  const camera = useThree((s) => s.camera)
+  const size = useThree((s) => s.size)
+  useEffect(() => {
+    const aspect = size.width / Math.max(1, size.height)
+    const dist = camera.position.distanceTo(CAMERA_TARGET)
+    const halfWidth = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2)) * aspect * dist
+    camera.zoom = Math.min(1, halfWidth / SCENE_HALF_WIDTH)
+    camera.updateProjectionMatrix()
+  }, [camera, size])
+  return null
+}
+
 export function AlignmentScene({
   aligned,
   searching,
@@ -260,11 +284,12 @@ export function AlignmentScene({
       className="absolute inset-0"
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}
-      camera={{ fov: 28, near: 0.1, far: 100, position: [0, 4.3, 9.6] }}
+      camera={{ fov: CAMERA_FOV, near: 0.1, far: 100, position: [0, 4.3, 9.6] }}
       onCreated={({ gl }) => {
         gl.outputColorSpace = THREE.SRGBColorSpace
       }}
     >
+      <FitCamera />
       <Lights />
       <Rig
         aligned={aligned}
