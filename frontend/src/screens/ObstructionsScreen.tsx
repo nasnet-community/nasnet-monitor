@@ -19,9 +19,9 @@ const PHASE_COPY: Record<ObstructionPhase, string> = {
 
 function LegendItem({ color, border, label }: { color: string; border?: string; label: string }) {
   return (
-    <span className="flex items-center gap-2.5 text-[15px] font-semibold">
+    <span className="flex items-center gap-2 text-[12.5px] font-semibold sm:gap-2.5 sm:text-[15px]">
       <span
-        className="h-3 w-3 rounded-full"
+        className="h-2.5 w-2.5 rounded-full sm:h-3 sm:w-3"
         style={{ background: color, border: border ? `1px solid ${border}` : undefined }}
       />
       {label}
@@ -64,7 +64,7 @@ export function ObstructionsScreen() {
 
       <div ref={legendRef} className="relative w-full max-w-[680px]">
         {infoOpen && <ObstructionGuideCard />}
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2.5 sm:gap-x-8 sm:gap-y-3">
           <LegendItem color="#3a3a3d" label="Unmapped" />
           <LegendItem color="#ffffff" border="rgba(0,0,0,0.15)" label="Clear view" />
           <LegendItem color="#ff3b30" label="Obstructions" />
@@ -91,7 +91,9 @@ export function ObstructionsScreen() {
         >
           <span
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
-              obstructed ? 'border-status-warn/50 text-status-warn' : 'border-border text-muted-foreground'
+              obstructed
+                ? 'border-status-warn/50 text-status-warn'
+                : 'border-border text-muted-foreground'
             }`}
           >
             {obstructed ? (

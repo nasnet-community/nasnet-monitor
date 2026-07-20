@@ -36,9 +36,9 @@ function sortValue(e: OutageEvent, key: SortKey): string | number {
   }
 }
 
-const COLUMNS: { key: SortKey; label: string; align: 'left' | 'right' }[] = [
+const COLUMNS: { key: SortKey; label: string; align: 'left' | 'right'; className?: string }[] = [
   { key: 'cause', label: 'Cause', align: 'left' },
-  { key: 'type', label: 'Type', align: 'left' },
+  { key: 'type', label: 'Type', align: 'left', className: 'hidden sm:table-cell' },
   { key: 'duration', label: 'Duration', align: 'right' },
   { key: 'started', label: 'Started', align: 'right' },
 ]
@@ -67,7 +67,7 @@ export function EventsScreen() {
   }, [events, sort])
 
   return (
-    <Card className="px-6 py-[22px]">
+    <Card className="px-4 py-[18px] sm:px-6 sm:py-[22px]">
       <div className="mb-[18px] text-[15px] font-semibold">Events &amp; outages</div>
 
       {events.length === 0 ? (
@@ -80,7 +80,10 @@ export function EventsScreen() {
                 const activeSort = sort.key === col.key
                 const Icon = !activeSort ? ChevronsUpDown : sort.dir === 'asc' ? ArrowUp : ArrowDown
                 return (
-                  <TableHead key={col.key} className={col.align === 'right' ? 'text-right' : ''}>
+                  <TableHead
+                    key={col.key}
+                    className={cn(col.align === 'right' && 'text-right', col.className)}
+                  >
                     <button
                       onClick={() => toggleSort(col.key)}
                       className={cn(
@@ -112,13 +115,13 @@ export function EventsScreen() {
                     {e.cause}
                   </span>
                 </TableCell>
-                <TableCell className="text-[12.5px] text-muted-foreground">
+                <TableCell className="hidden text-[12.5px] text-muted-foreground sm:table-cell">
                   {isBenignCause(e.cause) ? 'Routine' : 'Fault'}
                 </TableCell>
-                <TableCell className="text-right font-mono-nums font-medium">
+                <TableCell className="whitespace-nowrap text-right font-mono-nums font-medium">
                   {formatDuration(e.durationS)}
                 </TableCell>
-                <TableCell className="text-right font-mono-nums text-faint">
+                <TableCell className="whitespace-nowrap text-right font-mono-nums text-faint">
                   {formatWhen(e.startMs)}
                 </TableCell>
               </TableRow>

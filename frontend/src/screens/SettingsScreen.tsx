@@ -21,7 +21,7 @@ import { useAppStore } from '@/store/appStore'
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-border px-[22px] py-4 text-[13px] font-semibold text-muted-foreground">
+      <div className="border-b border-border px-[18px] py-4 text-[13px] font-semibold text-muted-foreground sm:px-[22px]">
         {title}
       </div>
       {children}
@@ -42,13 +42,13 @@ function Row({
 }) {
   return (
     <div
-      className={`flex items-center justify-between px-[22px] py-[17px] ${divider ? 'border-b border-border' : ''}`}
+      className={`flex items-center justify-between gap-4 px-[18px] py-[17px] sm:px-[22px] ${divider ? 'border-b border-border' : ''}`}
     >
-      <div>
+      <div className="min-w-0">
         <div className="text-sm font-medium">{title}</div>
         <div className="mt-[3px] text-[12.5px] text-faint">{description}</div>
       </div>
-      {control}
+      <div className="min-w-0 shrink-0 max-w-[45%]">{control}</div>
     </div>
   )
 }
@@ -284,7 +284,9 @@ export function SettingsScreen() {
           title="Wi-Fi name"
           description="Managed in the Starlink app"
           divider={false}
-          control={<div className="text-[13.5px] text-muted-foreground">{wifiName ?? '—'}</div>}
+          control={
+            <div className="truncate text-[13.5px] text-muted-foreground">{wifiName ?? '—'}</div>
+          }
         />
       </Section>
 
@@ -316,8 +318,8 @@ export function SettingsScreen() {
             />
           }
         />
-        <div className="flex items-center justify-between border-b border-border px-[22px] py-[17px]">
-          <div>
+        <div className="flex items-center justify-between gap-4 border-b border-border px-[18px] py-[17px] sm:px-[22px]">
+          <div className="min-w-0">
             <div className="text-sm font-medium">Sleep schedule</div>
             {scheduleOn ? (
               <button
@@ -363,12 +365,12 @@ export function SettingsScreen() {
           title="Firmware"
           description="Up to date"
           control={
-            <div className="font-mono-nums text-[13.5px] text-muted-foreground">
+            <div className="truncate font-mono-nums text-[13.5px] text-muted-foreground">
               {device.firmware}
             </div>
           }
         />
-        <div className="flex flex-col gap-2 px-[22px] py-[17px]">
+        <div className="flex flex-col gap-2 px-[18px] py-[17px] sm:px-[22px]">
           <div className="flex gap-3">
             <Button
               variant="outline"
@@ -395,9 +397,9 @@ export function SettingsScreen() {
           <div className="flex flex-col gap-3">
             <div className="rounded-[10px] border border-status-danger bg-card2 px-3 py-[10px] text-[12.5px] leading-snug text-status-danger">
               The router can only be renamed by factory-resetting it. This{' '}
-              <strong>erases all router settings</strong> (bypass mode, client names, DNS, DHCP)
-              and <strong>disconnects every device</strong>. The router reboots into setup
-              (~2 min); you’ll then reconnect to its default setup network to finish.
+              <strong>erases all router settings</strong> (bypass mode, client names, DNS, DHCP) and{' '}
+              <strong>disconnects every device</strong>. The router reboots into setup (~2 min);
+              you’ll then reconnect to its default setup network to finish.
             </div>
             <input
               value={newName}
@@ -463,8 +465,9 @@ export function SettingsScreen() {
           <div className="flex flex-col gap-3">
             <div className="text-[13px] leading-snug text-muted-foreground">
               Factory reset sent. The router is rebooting into setup mode (~2 min) and your
-              connection to it has dropped. On this machine, <strong>reconnect to the router’s
-              default setup Wi-Fi network</strong>, then apply the new name below.
+              connection to it has dropped. On this machine,{' '}
+              <strong>reconnect to the router’s default setup Wi-Fi network</strong>, then apply the
+              new name below.
             </div>
             {renameError && <div className="text-[12.5px] text-status-danger">{renameError}</div>}
             <div className="mt-1 flex justify-end gap-2">
@@ -481,7 +484,7 @@ export function SettingsScreen() {
                 onClick={applySetup}
                 className="h-auto rounded-[10px] px-4 py-2 text-[13px]"
               >
-                {renameBusy ? 'Applying…' : "I’ve reconnected — apply name"}
+                {renameBusy ? 'Applying…' : 'I’ve reconnected — apply name'}
               </Button>
             </div>
           </div>
@@ -503,10 +506,7 @@ export function SettingsScreen() {
               )}
             </div>
             <div className="mt-1 flex justify-end">
-              <Button
-                onClick={closeRename}
-                className="h-auto rounded-[10px] px-4 py-2 text-[13px]"
-              >
+              <Button onClick={closeRename} className="h-auto rounded-[10px] px-4 py-2 text-[13px]">
                 Done
               </Button>
             </div>

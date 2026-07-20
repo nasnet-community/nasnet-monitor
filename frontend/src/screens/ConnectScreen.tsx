@@ -42,7 +42,7 @@ export function ConnectScreen() {
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center gap-6 bg-background px-5 text-foreground">
-      <Card className="flex w-full max-w-[420px] flex-col gap-6 p-8">
+      <Card className="flex w-full max-w-[420px] flex-col gap-6 p-6 sm:p-8">
         <div className="flex flex-col items-center gap-3 text-center">
           <img
             src="/assets/logo.png"

@@ -18,7 +18,13 @@ function usePathDetail(mode: SpeedtestMode, live: boolean) {
   }
 }
 
-function SegmentedToggle({ mode, onChange }: { mode: SpeedtestMode; onChange: (m: SpeedtestMode) => void }) {
+function SegmentedToggle({
+  mode,
+  onChange,
+}: {
+  mode: SpeedtestMode
+  onChange: (m: SpeedtestMode) => void
+}) {
   const opts: { id: SpeedtestMode; label: string }[] = [
     { id: 'router', label: 'Device to Router' },
     { id: 'internet', label: 'Device to Internet' },
@@ -31,8 +37,10 @@ function SegmentedToggle({ mode, onChange }: { mode: SpeedtestMode; onChange: (m
           type="button"
           onClick={() => onChange(o.id)}
           className={cn(
-            'rounded-full px-4 py-1.5 text-[15px] font-semibold transition-colors md:text-[14px]',
-            mode === o.id ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'
+            'rounded-full px-3.5 py-1.5 text-[14px] font-semibold transition-colors sm:px-4 sm:text-[15px] md:text-[14px]',
+            mode === o.id
+              ? 'bg-foreground text-background'
+              : 'text-muted-foreground hover:text-foreground'
           )}
         >
           {o.label}
@@ -42,7 +50,15 @@ function SegmentedToggle({ mode, onChange }: { mode: SpeedtestMode; onChange: (m
   )
 }
 
-function Dial({ value, unit, icon: Icon }: { value: number; unit: string; icon: typeof ArrowDown }) {
+function Dial({
+  value,
+  unit,
+  icon: Icon,
+}: {
+  value: number
+  unit: string
+  icon: typeof ArrowDown
+}) {
   return (
     <div className="flex flex-1 flex-col items-center gap-1.5">
       <span className="font-mono-nums text-[42px] font-semibold leading-none tabular-nums">
@@ -59,7 +75,9 @@ function Dial({ value, unit, icon: Icon }: { value: number; unit: string; icon: 
 function Readout({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center">
-      <div className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-faint">{label}</div>
+      <div className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-faint">
+        {label}
+      </div>
       <div className="mt-1.5 truncate text-[14px] font-semibold">{value}</div>
     </div>
   )
@@ -86,7 +104,7 @@ export function SpeedTestScreen() {
         : 'Start'
 
   return (
-    <div className="mx-auto flex h-full w-full flex-col items-center justify-center gap-5 overflow-hidden py-1">
+    <div className="mx-auto flex min-h-full w-full flex-col items-center justify-center gap-5 py-1">
       <SegmentedToggle mode={mode} onChange={changeMode} />
 
       <div className="relative h-[clamp(200px,38vh,320px)] w-full">

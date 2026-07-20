@@ -59,7 +59,7 @@ export function HomeScreen() {
                 <ChevronRight className="h-[13px] w-[13px]" strokeWidth={2.4} />
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[34px] font-semibold leading-[1.05] tracking-[-0.03em]">
+                <span className="text-[28px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[34px]">
                   {meta.label}
                 </span>
                 <span
@@ -74,7 +74,7 @@ export function HomeScreen() {
           </Card>
 
           <div
-            className="relative min-h-[380px] flex-1 overflow-hidden rounded-[18px] border border-border"
+            className="relative min-h-[320px] flex-1 overflow-hidden rounded-[18px] border border-border sm:min-h-[380px]"
             style={{ background: 'var(--hero-bg)' }}
           >
             <CompassOverlay />

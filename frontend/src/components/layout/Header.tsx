@@ -101,7 +101,7 @@ export function Header() {
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[290px] p-0">
+          <DropdownMenuContent align="end" className="w-[290px] max-w-[calc(100vw-24px)] p-0">
             <DropdownMenuLabel className="px-3.5 pt-3">Recent events</DropdownMenuLabel>
             {recent.length === 0 ? (
               <div className="px-3.5 pb-3.5 pt-1 text-[13px] text-faint">
