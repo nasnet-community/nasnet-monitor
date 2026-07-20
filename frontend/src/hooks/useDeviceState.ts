@@ -1,11 +1,13 @@
 import { STATE_META } from '@/data/deviceMeta'
 import { deriveDeviceState, dishDisabledReason } from '@/data/starlink'
+import { useAppStore } from '@/store/appStore'
 
 import { useLiveTelemetry } from './useLiveTelemetry'
 
 export function useDeviceState() {
   const { status } = useLiveTelemetry()
-  const deviceState = deriveDeviceState(status)
+  const rfInhibited = useAppStore((s) => s.rfInhibited)
+  const deviceState = deriveDeviceState(status, rfInhibited)
 
   return {
     deviceState,

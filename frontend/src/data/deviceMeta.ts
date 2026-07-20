@@ -25,6 +25,12 @@ export const STATE_META: Record<DeviceState, StateMeta> = {
     sub: 'Panel folded flat for transport or storage.',
     uplink: 'Link stowed',
   },
+  rfOff: {
+    label: 'RF off',
+    color: '#f59e0b',
+    sub: 'RF transmit is disabled · the dish is not radiating.',
+    uplink: 'Transmit disabled',
+  },
   obstructed: {
     label: 'Obstructed',
     color: '#ef4444',

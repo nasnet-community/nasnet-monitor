@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { AlertTriangle, ChevronRight } from 'lucide-react'
+import { AlertTriangle, ChevronRight, RadioTower } from 'lucide-react'
 
 import { CompassOverlay } from '@/components/charts/CompassOverlay'
 import { HeadingArrow } from '@/components/charts/HeadingArrow'
@@ -13,11 +13,27 @@ import { useDeviceState } from '@/hooks/useDeviceState'
 import { useStats } from '@/hooks/useStats'
 
 export function HomeScreen() {
-  const { meta, disabledReason } = useDeviceState()
+  const { deviceState, meta, disabledReason } = useDeviceState()
   const { live, series } = useStats()
 
   return (
     <div className="flex flex-col gap-[22px]">
+      {deviceState === 'rfOff' && (
+        <div
+          className="flex items-center gap-3.5 rounded-xl border border-status-warn/40 px-5 py-4"
+          style={{ background: 'rgba(245,158,11,0.08)' }}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-status-warn/50 text-status-warn">
+            <RadioTower className="h-[17px] w-[17px]" strokeWidth={1.9} />
+          </span>
+          <div>
+            <div className="text-[14px] font-semibold">RF transmission is off</div>
+            <p className="text-[14px] leading-[1.5] text-muted-foreground">
+              The dish is not radiating. Re-enable RF transmit in Settings to restore service.
+            </p>
+          </div>
+        </div>
+      )}
       {disabledReason && (
         <div
           className="flex items-center gap-3.5 rounded-xl border border-status-danger/40 px-5 py-4"
