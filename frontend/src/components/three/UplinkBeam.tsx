@@ -8,6 +8,8 @@ import type { BeamStateConfig } from './deviceStateConfig'
 interface UplinkBeamProps {
   config: BeamStateConfig
   isDark: boolean
+  /** World position of the beam's base — the point on the dish face it emanates from. */
+  origin?: [number, number, number]
 }
 
 function useGlowTexture() {
@@ -27,7 +29,7 @@ function useGlowTexture() {
   }, [])
 }
 
-export function UplinkBeam({ config, isDark }: UplinkBeamProps) {
+export function UplinkBeam({ config, isDark, origin = [0, 1.12, -0.16] }: UplinkBeamProps) {
   const glowTex = useGlowTexture()
   const beamMat = useRef<THREE.MeshBasicMaterial>(null)
   const coreMat = useRef<THREE.MeshBasicMaterial>(null)
@@ -79,7 +81,7 @@ export function UplinkBeam({ config, isDark }: UplinkBeamProps) {
   if (!config.show) return null
 
   return (
-    <group position={[0, 1.12, -0.16]} rotation={[0, 0, -0.1]}>
+    <group position={origin} rotation={[0, 0, -0.1]}>
       <mesh position={[0, 1.55, 0]}>
         <cylinderGeometry args={[0.1, 0.045, 3.1, 28, 1, true]} />
         <meshBasicMaterial

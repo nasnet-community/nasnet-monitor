@@ -1,40 +1,40 @@
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 
+import { DISH_MODEL_SPECS, type DishModelSpec } from '@/data/dishModels'
+
+import { dishShape } from './dishShape'
+
 const PANEL_BASE = 0xf1ebdd
 
-function roundedRectShape(w: number, h: number, r: number) {
-  const x0 = -w / 2
-  const x1 = w / 2
-  const y0 = -h / 2
-  const y1 = h / 2
-  const shape = new THREE.Shape()
-  shape.moveTo(x0 + r, y0)
-  shape.lineTo(x1 - r, y0)
-  shape.quadraticCurveTo(x1, y0, x1, y0 + r)
-  shape.lineTo(x1, y1 - r)
-  shape.quadraticCurveTo(x1, y1, x1 - r, y1)
-  shape.lineTo(x0 + r, y1)
-  shape.quadraticCurveTo(x0, y1, x0, y1 - r)
-  shape.lineTo(x0, y0 + r)
-  shape.quadraticCurveTo(x0, y0, x0 + r, y0)
-  return shape
+interface DishSlabProps {
+  spec?: DishModelSpec
 }
 
-export function DishSlab() {
-  const slabGeo = useMemo(() => {
-    const shape = roundedRectShape(1.28, 1.6, 0.16)
-    const g = new THREE.ExtrudeGeometry(shape, {
+export function DishSlab({ spec = DISH_MODEL_SPECS.unknown }: DishSlabProps) {
+  const { slabGeo, backGeo } = useMemo(() => {
+    const slab = new THREE.ExtrudeGeometry(dishShape(spec.slab, spec.round), {
       depth: 0.06,
       bevelEnabled: true,
       bevelThickness: 0.012,
       bevelSize: 0.012,
       bevelSegments: 1,
     })
-    g.center()
-    return g
-  }, [])
-  useEffect(() => () => slabGeo.dispose(), [slabGeo])
+    slab.center()
+    const back = new THREE.ExtrudeGeometry(dishShape(spec.slab, spec.round, 0.91), {
+      depth: 0.02,
+      bevelEnabled: false,
+    })
+    back.center()
+    return { slabGeo: slab, backGeo: back }
+  }, [spec])
+  useEffect(
+    () => () => {
+      slabGeo.dispose()
+      backGeo.dispose()
+    },
+    [slabGeo, backGeo]
+  )
 
   return (
     <>
@@ -47,8 +47,7 @@ export function DishSlab() {
           emissiveIntensity={0.9}
         />
       </mesh>
-      <mesh position={[0, 0, -0.045]}>
-        <boxGeometry args={[1.16, 1.48, 0.02]} />
+      <mesh geometry={backGeo} position={[0, 0, -0.045]}>
         <meshStandardMaterial
           color={0x6b6e76}
           roughness={0.6}

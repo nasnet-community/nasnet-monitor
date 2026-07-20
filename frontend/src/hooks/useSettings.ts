@@ -1,3 +1,4 @@
+import { productName } from '@/data/starlink'
 import type { AppSettings } from '@/data/types'
 import { useAppStore } from '@/store/appStore'
 
@@ -10,7 +11,7 @@ export function useSettings() {
 
   const info = status?.deviceInfo
   const device = {
-    model: info?.hardwareVersion ?? '—',
+    model: info?.hardwareVersion ? productName(status) : '—',
     serial: info?.id ?? '—',
     firmware: info?.softwareVersion ?? '—',
     ssid: '—',

@@ -2,50 +2,53 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
+import { DISH_MODEL_SPECS, type DishModelSpec } from '@/data/dishModels'
+
 import { PANEL_BASE, type PanelStateConfig } from './deviceStateConfig'
+import { dishShape, panelBaseY } from './dishShape'
 
 interface DishPanelProps {
   config: PanelStateConfig
+  spec?: DishModelSpec
 }
 
-export function DishPanel({ config }: DishPanelProps) {
+export function DishPanel({ config, spec = DISH_MODEL_SPECS.unknown }: DishPanelProps) {
   const pivot = useRef<THREE.Group>(null)
   const panelMat = useRef<THREE.MeshStandardMaterial>(null)
   const stripMat = useRef<THREE.MeshStandardMaterial>(null)
   const kickstand = useRef<THREE.Group>(null)
   const strip = useRef<THREE.Mesh>(null)
 
-  const pw = 1.66
-  const ph = 1.3
+  const pw = spec.panel.w
+  const ph = spec.panel.h
+  const baseY = panelBaseY(spec)
 
-  const panelGeo = useMemo(() => {
-    const r = 0.13
-    const x0 = -pw / 2
-    const x1 = pw / 2
-    const y0 = 0
-    const y1 = ph
-    const shape = new THREE.Shape()
-    shape.moveTo(x0 + r, y0)
-    shape.lineTo(x1 - r, y0)
-    shape.quadraticCurveTo(x1, y0, x1, y0 + r)
-    shape.lineTo(x1, y1 - r)
-    shape.quadraticCurveTo(x1, y1, x1 - r, y1)
-    shape.lineTo(x0 + r, y1)
-    shape.quadraticCurveTo(x0, y1, x0, y1 - r)
-    shape.lineTo(x0, y0 + r)
-    shape.quadraticCurveTo(x0, y0, x0 + r, y0)
-    const geo = new THREE.ExtrudeGeometry(shape, {
+  const { panelGeo, backGeo } = useMemo(() => {
+    const panel = new THREE.ExtrudeGeometry(dishShape(spec.panel, spec.round), {
       depth: 0.09,
       bevelEnabled: true,
       bevelThickness: 0.02,
       bevelSize: 0.02,
       bevelSegments: 2,
     })
-    geo.translate(0, 0, -0.055)
-    return geo
-  }, [])
+    // Face is centered on the origin; lift it so the panel's base is at y = 0.
+    panel.translate(0, ph / 2, -0.055)
+    const back = new THREE.ExtrudeGeometry(dishShape(spec.panel, spec.round, 0.94), {
+      depth: 0.05,
+      bevelEnabled: false,
+    })
+    back.center()
+    back.translate(0, ph / 2, -0.085)
+    return { panelGeo: panel, backGeo: back }
+  }, [spec, ph])
 
-  useEffect(() => () => panelGeo.dispose(), [panelGeo])
+  useEffect(
+    () => () => {
+      panelGeo.dispose()
+      backGeo.dispose()
+    },
+    [panelGeo, backGeo]
+  )
 
   useEffect(() => {
     if (panelMat.current) {
@@ -58,9 +61,9 @@ export function DishPanel({ config }: DishPanelProps) {
       stripMat.current.emissive.setHex(config.cable)
       stripMat.current.emissiveIntensity = config.cableI
     }
-    if (strip.current) strip.current.visible = config.cableI > 0.01
-    if (kickstand.current) kickstand.current.visible = config.stand
-  }, [config])
+    if (strip.current) strip.current.visible = !spec.round && config.cableI > 0.01
+    if (kickstand.current) kickstand.current.visible = config.stand && spec.kickstand
+  }, [config, spec])
 
   useFrame(() => {
     if (pivot.current) {
@@ -70,13 +73,12 @@ export function DishPanel({ config }: DishPanelProps) {
 
   return (
     <group>
-      <group ref={pivot} position={[0, 0.05, 0.34]}>
+      <group ref={pivot} position={[0, baseY, 0.34]}>
         <mesh geometry={panelGeo}>
           <meshStandardMaterial ref={panelMat} color={PANEL_BASE} roughness={0.6} metalness={0.05} />
         </mesh>
 
-        <mesh position={[0, ph / 2, -0.085]}>
-          <boxGeometry args={[pw * 0.94, ph * 0.94, 0.05]} />
+        <mesh geometry={backGeo}>
           <meshStandardMaterial color={0x2c2e34} roughness={0.55} metalness={0.3} />
         </mesh>
 
@@ -93,18 +95,25 @@ export function DishPanel({ config }: DishPanelProps) {
 
         <group ref={kickstand} position={[0, 0.09, -0.07]} rotation={[0.52, 0, 0]}>
           <mesh position={[0, 0, -0.3]}>
-            <boxGeometry args={[0.5, 0.05, 0.66]} />
+            <boxGeometry args={[pw * 0.3, 0.05, 0.66]} />
             <meshStandardMaterial color={0x23252b} roughness={0.5} metalness={0.4} />
           </mesh>
           <mesh position={[0, 0, -0.6]}>
-            <boxGeometry args={[0.54, 0.05, 0.14]} />
+            <boxGeometry args={[pw * 0.33, 0.05, 0.14]} />
             <meshStandardMaterial color={0x23252b} roughness={0.5} metalness={0.4} />
           </mesh>
         </group>
       </group>
 
+      {spec.actuated && (
+        <mesh position={[0, baseY / 2 + 0.02, 0.3]}>
+          <cylinderGeometry args={[0.045, 0.055, baseY + 0.1, 16]} />
+          <meshStandardMaterial color={0x9a9da6} roughness={0.45} metalness={0.5} />
+        </mesh>
+      )}
+
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <circleGeometry args={[1.35, 40]} />
+        <circleGeometry args={[Math.max(pw, ph) * 0.81, 40]} />
         <meshBasicMaterial color={0x000000} transparent opacity={0.42} />
       </mesh>
     </group>

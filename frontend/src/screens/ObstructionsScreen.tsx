@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Info } from 'lucide-react'
 
 import { ObstructionGuideCard } from '@/components/ObstructionGuideCard'
+import { useDishModel } from '@/hooks/useDishModel'
 import { useObstructions } from '@/hooks/useObstructions'
 import type { ObstructionPhase } from '@/data/types'
 
@@ -30,6 +31,7 @@ function LegendItem({ color, border, label }: { color: string; border?: string; 
 
 export function ObstructionsScreen() {
   const { map, phase, alert } = useObstructions()
+  const dishSpec = useDishModel()
   const [infoOpen, setInfoOpen] = useState(false)
   const legendRef = useRef<HTMLDivElement>(null)
 
@@ -56,7 +58,7 @@ export function ObstructionsScreen() {
 
       <div className="relative mt-1 mb-12 h-[clamp(360px,52vh,620px)] w-full">
         <Suspense fallback={null}>
-          <ObstructionScene grid={map} spinSpeed={0.35} />
+          <ObstructionScene grid={map} spinSpeed={0.35} spec={dishSpec} />
         </Suspense>
       </div>
 

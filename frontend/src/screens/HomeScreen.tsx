@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { AlertTriangle, ChevronRight } from 'lucide-react'
 
 import { CompassOverlay } from '@/components/charts/CompassOverlay'
 import { HeadingArrow } from '@/components/charts/HeadingArrow'
@@ -13,11 +13,27 @@ import { useDeviceState } from '@/hooks/useDeviceState'
 import { useStats } from '@/hooks/useStats'
 
 export function HomeScreen() {
-  const { meta } = useDeviceState()
+  const { meta, disabledReason } = useDeviceState()
   const { live, series } = useStats()
 
   return (
     <div className="flex flex-col gap-[22px]">
+      {disabledReason && (
+        <div
+          className="flex items-center gap-3.5 rounded-xl border border-status-danger/40 px-5 py-4"
+          style={{ background: 'rgba(239,68,68,0.08)' }}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-status-danger/50 text-status-danger">
+            <AlertTriangle className="h-[17px] w-[17px]" strokeWidth={1.9} />
+          </span>
+          <div>
+            <div className="text-[14px] font-semibold">Starlink is disabled</div>
+            <p className="text-[14px] leading-[1.5] text-muted-foreground">
+              Stated reason: {disabledReason}.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 items-stretch gap-[22px] lg:grid-cols-[1.55fr_1fr]">
         <div className="flex flex-col gap-[14px]">
           <Card className="flex items-center gap-[18px] px-[22px] py-[18px]">
