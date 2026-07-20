@@ -13,7 +13,11 @@ import (
 )
 
 func newHandler() *Handler {
-	return New(service.NewStatusService("test"), service.NewDishService("192.168.100.1:9200"))
+	return New(
+		service.NewStatusService("test"),
+		service.NewDishService("192.168.100.1:9200"),
+		service.NewUpdateService("test"),
+	)
 }
 
 func newContext(method, target string) (*httptest.ResponseRecorder, echo.Context) {

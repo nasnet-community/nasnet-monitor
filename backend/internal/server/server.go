@@ -31,6 +31,7 @@ func New(cfg *config.Config, version string) *Server {
 	h := handler.New(
 		service.NewStatusService(version),
 		service.NewDishService(cfg.DishAddress),
+		service.NewUpdateService(version),
 	)
 	s.registerRoutes(h)
 
