@@ -101,7 +101,7 @@ function SceneTrees() {
 
 export function ObstructionGuideCard() {
   return (
-    <div className="absolute bottom-full left-1/2 z-20 mb-3 w-[600px] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-2xl bg-white px-6 py-5 text-neutral-800 shadow-2xl">
+    <div className="absolute inset-x-0 bottom-full z-20 mx-auto mb-3 max-w-[600px] rounded-2xl bg-white px-6 py-5 text-neutral-800 shadow-2xl">
       <p className="text-[13.5px] leading-[1.5]">
         Your Starlink needs a clear view of the sky so it can stay connected with satellites as they
         move overhead. Objects that obstruct the connection between your Starlink and the satellite,
