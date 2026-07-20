@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Text } from '@react-three/drei'
 import * as THREE from 'three'
 
+import { DISH_MODEL_SPECS, type DishModelSpec } from '@/data/dishModels'
 import type { ObstructionGrid } from '@/data/types'
 
 import { DishSlab } from './DishSlab'
@@ -229,23 +230,23 @@ function GroundGlow() {
   )
 }
 
-function CenterDish() {
+function CenterDish({ spec }: { spec: DishModelSpec }) {
   return (
     <group position={[0, 0.72, 0]} scale={0.7} rotation={[0, NORTH_AZIMUTH, 0]}>
       <group rotation={[ELEV_TILT, 0, 0]}>
-        <DishSlab />
+        <DishSlab spec={spec} />
       </group>
     </group>
   )
 }
 
-function Rig({ grid }: { grid: ObstructionGrid | null }) {
+function Rig({ grid, spec }: { grid: ObstructionGrid | null; spec: DishModelSpec }) {
   return (
     <group rotation={[0, 0.35, 0]}>
       <GroundGlow />
       <SkyDome grid={grid} />
       <CompassRing />
-      <CenterDish />
+      <CenterDish spec={spec} />
     </group>
   )
 }
@@ -253,9 +254,10 @@ function Rig({ grid }: { grid: ObstructionGrid | null }) {
 interface ObstructionSceneProps {
   grid: ObstructionGrid | null
   spinSpeed: number
+  spec?: DishModelSpec
 }
 
-export function ObstructionScene({ grid, spinSpeed }: ObstructionSceneProps) {
+export function ObstructionScene({ grid, spinSpeed, spec }: ObstructionSceneProps) {
   const [autoRotating, setAutoRotating] = useState(true)
   const resumeTimer = useRef<ReturnType<typeof setTimeout>>()
   useEffect(() => () => clearTimeout(resumeTimer.current), [])
@@ -271,7 +273,7 @@ export function ObstructionScene({ grid, spinSpeed }: ObstructionSceneProps) {
       }}
     >
       <Lights />
-      <Rig grid={grid} />
+      <Rig grid={grid} spec={spec ?? DISH_MODEL_SPECS.unknown} />
       <OrbitControls
         target={[0, 0.85, 0]}
         enablePan={false}

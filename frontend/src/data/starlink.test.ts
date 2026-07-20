@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   availabilityPct,
   deriveDeviceState,
+  dishDisabledReason,
   speedtestErrorLabel,
   speedtestLatest,
   speedtestPeak,
@@ -342,5 +343,26 @@ describe('speedtest helpers', () => {
     expect(speedtestErrorLabel('SPEEDTEST_ERROR_NONE')).toBeNull()
     expect(speedtestErrorLabel('SPEEDTEST_ERROR_OFFLINE')).toMatch(/offline/i)
     expect(speedtestErrorLabel('SOMETHING_NEW')).toBe('The speed test failed.')
+  })
+})
+
+describe('dishDisabledReason', () => {
+  it('maps known disablement codes to friendly labels', () => {
+    expect(dishDisabledReason({ disablementCode: 'NO_ACTIVE_ACCOUNT' })).toBe('No active account')
+    expect(dishDisabledReason({ disablementCode: 'TOO_FAR_FROM_SERVICE_ADDRESS' })).toBe(
+      'Too far from service address'
+    )
+  })
+
+  it('prettifies unknown codes instead of hiding them', () => {
+    expect(dishDisabledReason({ disablementCode: 'MOVING_TOO_FAST' })).toBe('Moving too fast')
+  })
+
+  it('returns null for healthy or missing codes', () => {
+    expect(dishDisabledReason(null)).toBeNull()
+    expect(dishDisabledReason({})).toBeNull()
+    expect(dishDisabledReason({ disablementCode: 'OKAY' })).toBeNull()
+    expect(dishDisabledReason({ disablementCode: 'UNKNOWN' })).toBeNull()
+    expect(dishDisabledReason({ disablementCode: 0 })).toBeNull()
   })
 })

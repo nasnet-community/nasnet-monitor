@@ -1,5 +1,5 @@
 import { STATE_META } from '@/data/deviceMeta'
-import { deriveDeviceState } from '@/data/starlink'
+import { deriveDeviceState, dishDisabledReason } from '@/data/starlink'
 
 import { useLiveTelemetry } from './useLiveTelemetry'
 
@@ -10,5 +10,6 @@ export function useDeviceState() {
   return {
     deviceState,
     meta: STATE_META[deviceState],
+    disabledReason: dishDisabledReason(status),
   }
 }

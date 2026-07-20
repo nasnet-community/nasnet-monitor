@@ -1,3 +1,4 @@
+import { classifyDishModel, DISH_MODEL_SPECS, type DishModel } from './dishModels'
 import type {
   AlignmentData,
   ChartSeries,
@@ -74,6 +75,7 @@ export interface StarlinkStatus {
   popPingDropRate?: number
   boresightAzimuthDeg?: number
   boresightElevationDeg?: number
+  hasActuators?: string | number
   alignmentStats?: {
     tiltAngleDeg?: number
     boresightAzimuthDeg?: number
@@ -84,6 +86,7 @@ export interface StarlinkStatus {
     attitudeUncertaintyDeg?: number
   }
   stowRequested?: boolean
+  disablementCode?: string | number
   config?: {
     snowMeltMode?: string
     powerSaveMode?: boolean
@@ -157,6 +160,25 @@ function fmtMbps(mbps: number | null): string {
 export function availabilityPct(s: StarlinkStatus): number {
   if (s.popPingDropRate == null) return 100
   return Number(((1 - clamp01(s.popPingDropRate)) * 100).toFixed(2))
+}
+
+// Known values of `disablementCode` from dish_get_status; anything unmapped is
+// prettified from the raw enum name so new codes still read as a sentence.
+const DISABLEMENT_LABELS: Record<string, string> = {
+  NO_ACTIVE_ACCOUNT: 'No active account',
+  TOO_FAR_FROM_SERVICE_ADDRESS: 'Too far from service address',
+  IN_OCEAN: 'In ocean',
+}
+
+const DISABLEMENT_OK = new Set(['', 'OKAY', 'OK', 'UNKNOWN', '0'])
+
+export function dishDisabledReason(s: StarlinkStatus | null): string | null {
+  const code = s?.disablementCode
+  if (code == null) return null
+  const key = String(code).toUpperCase()
+  if (DISABLEMENT_OK.has(key)) return null
+  const pretty = key.replace(/_/g, ' ').toLowerCase()
+  return DISABLEMENT_LABELS[key] ?? pretty.charAt(0).toUpperCase() + pretty.slice(1)
 }
 
 export function deriveDeviceState(s: StarlinkStatus | null): DeviceState {
@@ -422,11 +444,14 @@ export function toNetworkDevices(clients: WifiClient[], clientIndex: number | nu
   })
 }
 
+export function dishModelOf(s: StarlinkStatus | null): DishModel {
+  return classifyDishModel(s?.deviceInfo?.hardwareVersion, s?.hasActuators)
+}
+
 export function productName(s: StarlinkStatus | null): string {
-  const hw = s?.deviceInfo?.hardwareVersion?.toLowerCase() ?? ''
-  if (hw.includes('mini')) return 'Starlink Mini'
-  if (hw) return 'Starlink'
-  return 'Starlink router'
+  const hw = s?.deviceInfo?.hardwareVersion ?? ''
+  if (!hw) return 'Starlink router'
+  return DISH_MODEL_SPECS[dishModelOf(s)].displayName
 }
 
 export function toNetworkNode(s: StarlinkStatus | null, deviceCount: number): NetworkNode {

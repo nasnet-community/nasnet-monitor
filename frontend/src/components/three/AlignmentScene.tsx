@@ -3,32 +3,17 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { Line, OrbitControls, Text } from '@react-three/drei'
 import * as THREE from 'three'
 
+import { DISH_MODEL_SPECS, type DishModelSpec } from '@/data/dishModels'
+
 import { DishSlab } from './DishSlab'
 import { Lights } from './Lights'
+import { dishShape } from './dishShape'
 
 const ELEV_TILT = -1.0
 
 const YAW_TWEEN_SECONDS = 1.0
 
 const NORTH_AZIMUTH = 1.22
-
-function roundedRectShape(w: number, h: number, r: number) {
-  const x0 = -w / 2
-  const x1 = w / 2
-  const y0 = -h / 2
-  const y1 = h / 2
-  const shape = new THREE.Shape()
-  shape.moveTo(x0 + r, y0)
-  shape.lineTo(x1 - r, y0)
-  shape.quadraticCurveTo(x1, y0, x1, y0 + r)
-  shape.lineTo(x1, y1 - r)
-  shape.quadraticCurveTo(x1, y1, x1 - r, y1)
-  shape.lineTo(x0 + r, y1)
-  shape.quadraticCurveTo(x0, y1, x0, y1 - r)
-  shape.lineTo(x0, y0 + r)
-  shape.quadraticCurveTo(x0, y0, x0 + r, y0)
-  return shape
-}
 
 function relativeYaw(
   aligned: boolean,
@@ -46,20 +31,23 @@ function DishAssembly({
   searching,
   errorDeg,
   rotateDirection,
+  spec,
 }: {
   aligned: boolean
   searching: boolean
   errorDeg: number | null
   rotateDirection: 'cw' | 'ccw' | null
+  spec: DishModelSpec
 }) {
   const yaw = useRef<THREE.Group>(null)
 
+  // Target outline: the model's slab scaled up slightly so it reads as a frame.
   const outlinePoints = useMemo(
     () =>
-      roundedRectShape(1.46, 1.8, 0.17)
+      dishShape(spec.slab, spec.round, 1.13)
         .getPoints(64)
         .map((p) => new THREE.Vector3(p.x, p.y, 0)),
-    []
+    [spec]
   )
 
   const target = relativeYaw(aligned, searching, errorDeg, rotateDirection)
@@ -98,7 +86,7 @@ function DishAssembly({
 
       <group ref={yaw}>
         <group rotation={[ELEV_TILT, 0, 0]}>
-          <DishSlab />
+          <DishSlab spec={spec} />
         </group>
       </group>
     </group>
@@ -197,7 +185,7 @@ function CompassRing() {
   )
 }
 
-const ARROW_RADIUS = RING_RADIUS + 0.25
+const ARROW_RADIUS = RING_RADIUS + 0.55
 const ARROW_Y = 0.06
 const ARROW_START = -0.5
 const ARROW_END = 1.25
@@ -235,7 +223,8 @@ function RotationArrow({ direction }: { direction: 'cw' | 'ccw' }) {
   )
 }
 
-function Rig({ aligned, searching, rotateDirection, errorDeg }: AlignmentSceneProps) {
+function Rig({ aligned, searching, rotateDirection, errorDeg, spec }: AlignmentSceneProps) {
+  const dishSpec = spec ?? DISH_MODEL_SPECS.unknown
   return (
     <group rotation={[0, 0.35, 0]}>
       <CompassRing />
@@ -245,6 +234,7 @@ function Rig({ aligned, searching, rotateDirection, errorDeg }: AlignmentScenePr
         searching={searching}
         errorDeg={errorDeg}
         rotateDirection={rotateDirection}
+        spec={dishSpec}
       />
     </group>
   )
@@ -255,6 +245,7 @@ interface AlignmentSceneProps {
   searching: boolean
   rotateDirection: 'cw' | 'ccw' | null
   errorDeg: number | null
+  spec?: DishModelSpec
 }
 
 export function AlignmentScene({
@@ -262,6 +253,7 @@ export function AlignmentScene({
   searching,
   rotateDirection,
   errorDeg,
+  spec,
 }: AlignmentSceneProps) {
   return (
     <Canvas
@@ -279,6 +271,7 @@ export function AlignmentScene({
         searching={searching}
         rotateDirection={rotateDirection}
         errorDeg={errorDeg}
+        spec={spec}
       />
       <OrbitControls
         target={[0, 0.55, 0]}

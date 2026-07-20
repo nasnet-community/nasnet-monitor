@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 
 import { useAlignment } from '@/hooks/useAlignment'
+import { useDishModel } from '@/hooks/useDishModel'
 
 const AlignmentScene = lazy(() =>
   import('@/components/three/AlignmentScene').then((m) => ({ default: m.AlignmentScene }))
@@ -29,6 +30,7 @@ export function AlignmentScreen() {
     headingErrorDeg,
     rotateDirection,
   } = useAlignment()
+  const dishSpec = useDishModel()
 
   const heading = searching
     ? 'Determining orientation'
@@ -62,6 +64,7 @@ export function AlignmentScreen() {
             searching={searching}
             rotateDirection={rotateDirection}
             errorDeg={headingErrorDeg}
+            spec={dishSpec}
           />
         </Suspense>
       </div>

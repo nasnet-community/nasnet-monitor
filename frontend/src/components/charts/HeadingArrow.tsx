@@ -7,7 +7,7 @@ interface HeadingArrowProps {
 export function HeadingArrow({ headingDeg = 38 }: HeadingArrowProps) {
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[64%] z-[1] h-[460px] w-[460px]"
+      className="pointer-events-none absolute left-1/2 top-[64%] z-[3] h-[460px] w-[460px]"
       style={{ transform: PERSPECTIVE }}
     >
       <svg viewBox="0 0 400 400" width={460} height={460}>
