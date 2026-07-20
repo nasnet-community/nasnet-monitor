@@ -49,8 +49,8 @@ function FieldRows({ rows }: { rows: Row[] }) {
           key={row.label}
           className="flex min-w-0 items-baseline justify-between gap-4 border-b border-border/60 pb-[10px]"
         >
-          <dt className="text-[13px] text-muted-foreground">{row.label}</dt>
-          <dd className="min-w-0 break-words text-right font-mono-nums text-[13px] font-medium">
+          <dt className="min-w-0 text-[13px] text-muted-foreground">{row.label}</dt>
+          <dd className="max-w-[55%] shrink-0 break-words text-right font-mono-nums text-[13px] font-medium">
             {row.value}
           </dd>
         </div>
