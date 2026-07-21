@@ -109,9 +109,10 @@ jobs:
           for SUFFIX in amd64 arm64; do
             REF="${IMAGE}:main-${SUFFIX}"
             OUT="nasnet-monitor-main-${SUFFIX}.tar"
-            echo "-> ${REF} => dist/${OUT}"
+            echo "-> ${REF} => dist/${OUT}.gz"
             skopeo copy "docker://${REF}" "docker-archive:dist/${OUT}:nasnet-monitor:main-${SUFFIX}"
-            ( cd dist && sha256sum "${OUT}" > "${OUT}.sha256" )
+            gzip -9 "dist/${OUT}"
+            ( cd dist && sha256sum "${OUT}.gz" > "${OUT}.gz.sha256" )
           done
 
       - name: Publish to rolling snapshot release
@@ -124,9 +125,9 @@ jobs:
             Rolling snapshot, rebuilt on every push to `main`.
             Commit ${{ github.sha }}.
 
-            Container image tars (`docker load` / RouterOS container import):
-            - `nasnet-monitor-main-amd64.tar` (x86_64)
-            - `nasnet-monitor-main-arm64.tar` (arm64 — MikroTik hAP ax2)
+            Container image tars (`docker load < file.tar.gz`; for RouterOS container import, `gunzip` first):
+            - `nasnet-monitor-main-amd64.tar.gz` (x86_64)
+            - `nasnet-monitor-main-arm64.tar.gz` (arm64 — MikroTik hAP ax2)
           files: |
-            dist/*.tar
-            dist/*.tar.sha256
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
