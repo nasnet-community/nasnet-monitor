@@ -13,9 +13,11 @@ const ELEV_TILT = -1.0
 const NORTH_AZIMUTH = 1.22
 
 const DOME_RADIUS = 3
+const DOME_MAX_THETA = (Math.PI / 2) * 0.75
 
 const CLEAR = new THREE.Color('#ffffff')
 const OBSTRUCTION = new THREE.Color('#ff3b30')
+const UNMAPPED = new THREE.Color('#3a3a3d')
 
 const DEG2RAD = Math.PI / 180
 
@@ -38,7 +40,8 @@ function SkyDome({ grid }: { grid: ObstructionGrid | null }) {
     () =>
       radialTexture([
         [0, 'rgba(255,255,255,1)'],
-        [0.45, 'rgba(255,255,255,0.9)'],
+        [0.82, 'rgba(255,255,255,1)'],
+        [0.92, 'rgba(255,255,255,0)'],
         [1, 'rgba(255,255,255,0)'],
       ]),
     []
@@ -57,7 +60,7 @@ function SkyDome({ grid }: { grid: ObstructionGrid | null }) {
     const cx = (numCols - 1) / 2
     const cy = (numRows - 1) / 2
     const halfExtent = Math.min(numRows, numCols) / 2
-    const thetaMax = grid.maxThetaDeg * DEG2RAD
+    const thetaMax = Math.min(grid.maxThetaDeg * DEG2RAD, DOME_MAX_THETA)
     const azimuthOffset = grid.azimuthOffsetDeg * DEG2RAD
 
     for (let i = 0; i < snr.length; i++) {
@@ -69,9 +72,8 @@ function SkyDome({ grid }: { grid: ObstructionGrid | null }) {
       if (pr > 1) continue
 
       const value = snr[i]
-      if (value < 0) continue
 
-      const azimuth = Math.atan2(dx, -dy) + azimuthOffset
+      const azimuth = azimuthOffset + Math.PI - Math.atan2(dx, -dy)
       const elevation = Math.PI / 2 - Math.min(pr, 1) * thetaMax
       const a = NORTH_AZIMUTH - azimuth
       const cosEl = Math.cos(elevation)
@@ -81,12 +83,18 @@ function SkyDome({ grid }: { grid: ObstructionGrid | null }) {
         Math.cos(a) * cosEl * DOME_RADIUS
       )
 
-      c.copy(OBSTRUCTION).lerp(CLEAR, THREE.MathUtils.clamp(value, 0, 1))
-      colors.push(c.r, c.g, c.b)
+      let alpha = 1
+      if (value < 0) {
+        c.copy(UNMAPPED)
+        alpha = THREE.MathUtils.clamp((1 - pr) / 0.45, 0, 1)
+      } else {
+        c.copy(OBSTRUCTION).lerp(CLEAR, THREE.MathUtils.clamp(value, 0, 1))
+      }
+      colors.push(c.r, c.g, c.b, alpha)
     }
 
     g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-    g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+    g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 4))
     return g
   }, [grid])
 
@@ -100,7 +108,7 @@ function SkyDome({ grid }: { grid: ObstructionGrid | null }) {
         alphaMap={sprite}
         vertexColors
         transparent
-        alphaTest={0.2}
+        alphaTest={0.05}
         sizeAttenuation
         depthWrite={false}
       />
