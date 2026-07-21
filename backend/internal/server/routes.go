@@ -7,6 +7,7 @@ func (s *Server) registerRoutes(h *handler.Handler) {
 
 	api := s.echo.Group("/api")
 	api.GET("/status", h.Status)
+	api.GET("/update-check", h.UpdateCheck)
 
 	dish := api.Group("/dish")
 	dish.POST("/status", h.DishStatus)

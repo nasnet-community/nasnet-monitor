@@ -6,6 +6,7 @@ require (
 	github.com/fullstorydev/grpcurl v1.9.3
 	github.com/jhump/protoreflect v1.18.0
 	github.com/labstack/echo/v4 v4.15.2
+	golang.org/x/mod v0.38.0
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
 )

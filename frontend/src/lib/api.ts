@@ -38,21 +38,7 @@ interface Envelope<T> {
   error?: string
 }
 
-async function post<T>(path: string, address: string, body?: unknown): Promise<T | undefined> {
-  let res: Response
-  try {
-    res = await fetch(path, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(address ? { [DISH_HEADER]: address } : {}),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
-  } catch {
-    throw new Error(SERVER_ISSUE)
-  }
-
+async function unwrap<T>(res: Response): Promise<T | undefined> {
   let env: Envelope<T> | undefined
   try {
     env = (await res.json()) as Envelope<T>
@@ -70,6 +56,44 @@ async function post<T>(path: string, address: string, body?: unknown): Promise<T
     throw new Error(`request failed (${res.status})`)
   }
   return env?.data
+}
+
+async function post<T>(path: string, address: string, body?: unknown): Promise<T | undefined> {
+  let res: Response
+  try {
+    res = await fetch(path, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(address ? { [DISH_HEADER]: address } : {}),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+  } catch {
+    throw new Error(SERVER_ISSUE)
+  }
+  return unwrap<T>(res)
+}
+
+async function get<T>(path: string): Promise<T | undefined> {
+  let res: Response
+  try {
+    res = await fetch(path)
+  } catch {
+    throw new Error(SERVER_ISSUE)
+  }
+  return unwrap<T>(res)
+}
+
+export interface UpdateCheck {
+  currentVersion: string
+  latestVersion?: string
+  updateAvailable: boolean
+  releaseUrl?: string
+}
+
+export async function checkForUpdate(): Promise<UpdateCheck | undefined> {
+  return get<UpdateCheck>('/api/update-check')
 }
 
 export async function checkDish(address: string): Promise<void> {

@@ -8,6 +8,7 @@ import { useDishControl } from '@/hooks/useDishControl'
 import { useLiveTelemetry } from '@/hooks/useLiveTelemetry'
 import { useSettings } from '@/hooks/useSettings'
 import {
+  checkForUpdate as apiCheckForUpdate,
   factoryReset as apiFactoryReset,
   fetchDishStatus,
   getBypassMode as apiGetBypassMode,
@@ -15,6 +16,7 @@ import {
   getWifiSetupComplete as apiGetWifiSetupComplete,
   routerAddressOrDefault,
   wifiSetup as apiWifiSetup,
+  type UpdateCheck,
 } from '@/lib/api'
 import { useAppStore } from '@/store/appStore'
 
@@ -95,6 +97,22 @@ export function SettingsScreen() {
   const [wifiName, setWifiName] = useState<string | null>(null)
   const [bypass, setBypass] = useState<boolean | null>(null)
   const [snowMelt, setSnowMelt] = useState<string | null>(null)
+  const [update, setUpdate] = useState<UpdateCheck | null>(null)
+  const [updateFailed, setUpdateFailed] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    apiCheckForUpdate()
+      .then((result) => {
+        if (!cancelled && result) setUpdate(result)
+      })
+      .catch(() => {
+        if (!cancelled) setUpdateFailed(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const [sleep, setSleep] = useState(false)
   const [gpsInhibited, setGpsInhibited] = useState(false)
@@ -361,6 +379,34 @@ export function SettingsScreen() {
       </Section>
 
       <Section title="Device">
+        <Row
+          title="App version"
+          description={
+            update === null
+              ? updateFailed
+                ? 'Couldn’t check for updates'
+                : 'Checking for updates…'
+              : update.updateAvailable
+                ? `Version ${update.latestVersion} is available`
+                : 'Up to date'
+          }
+          control={
+            update?.updateAvailable && update.releaseUrl ? (
+              <a
+                href={update.releaseUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[13.5px] font-medium text-primary underline underline-offset-2"
+              >
+                Get v{update.latestVersion}
+              </a>
+            ) : (
+              <div className="truncate font-mono-nums text-[13.5px] text-muted-foreground">
+                {update ? `v${update.currentVersion}` : '—'}
+              </div>
+            )
+          }
+        />
         <Row
           title="Firmware"
           description="Up to date"
