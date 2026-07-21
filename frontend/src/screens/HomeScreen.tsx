@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react'
 import { AlertTriangle, ChevronRight, RadioTower } from 'lucide-react'
 
 import { CompassOverlay } from '@/components/charts/CompassOverlay'
-import { HeadingArrow } from '@/components/charts/HeadingArrow'
 import { Sparkline } from '@/components/charts/Sparkline'
 import { Card } from '@/components/ui/card'
 
@@ -81,7 +80,6 @@ export function HomeScreen() {
             <Suspense fallback={null}>
               <DeviceScene />
             </Suspense>
-            <HeadingArrow />
           </div>
         </div>
 
