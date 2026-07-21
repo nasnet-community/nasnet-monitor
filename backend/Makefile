@@ -35,9 +35,10 @@ dev:
 frontend:
 	rm -rf $(WEB_DIST)
 	cp -r $(FRONTEND_DIST) $(WEB_DIST)
+	find $(WEB_DIST) -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.mjs' -o -name '*.svg' -o -name '*.json' -o -name '*.txt' \) -exec gzip -9 {} +
 
 # Production binary with the real frontend embedded.
 release: frontend
-	go build -o nasnet-monitor .
+	go build -trimpath -ldflags="-s -w" -o nasnet-monitor .
 
 check: fmt-check vet lint test build

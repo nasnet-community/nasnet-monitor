@@ -78,8 +78,7 @@ flowchart LR
 
 - **Backend:** Go + [Echo](https://echo.labstack.com/), layered with constructor dependency
   injection and graceful shutdown.
-  gRPC reflection via [`grpcurl`](https://github.com/fullstorydev/grpcurl) +
-  [`protoreflect`](https://github.com/jhump/protoreflect).
+  gRPC reflection via [`protoreflect`](https://github.com/jhump/protoreflect).
 - **Frontend:** Vite + React 18 + TypeScript (strict), Tailwind CSS + shadcn/ui (Radix),
   react-three-fiber / three.js for the 3D scene, react-router-dom, Zustand for state.
 

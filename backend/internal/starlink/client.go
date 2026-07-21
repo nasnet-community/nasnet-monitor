@@ -8,11 +8,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fullstorydev/grpcurl"
 	"github.com/jhump/protoreflect/desc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 const defaultCallTimeout = 10 * time.Second
@@ -70,33 +74,96 @@ const maxDescribeDepth = 6
 
 func (c *Client) Invoke(ctx context.Context, address, method string, reqJSON []byte) (json.RawMessage, error) {
 	var out json.RawMessage
-	err := c.withSource(ctx, address, func(callCtx context.Context, conn *grpc.ClientConn, src grpcurl.DescriptorSource) error {
-		parser, formatter, perr := grpcurl.RequestParserAndFormatter(
-			grpcurl.FormatJSON, src, bytes.NewReader(reqJSON),
-			grpcurl.FormatOptions{EmitJSONDefaultFields: true},
-		)
-		if perr != nil {
-			return fmt.Errorf("prepare request: %w", perr)
+	err := c.withSource(ctx, address, func(callCtx context.Context, conn *grpc.ClientConn, src DescriptorSource) error {
+		mtd, merr := findMethod(src, method)
+		if merr != nil {
+			return merr
+		}
+		resolver := &sourceResolver{src: src}
+
+		req := dynamicpb.NewMessage(mtd.GetInputType().UnwrapMessage())
+		if body := bytes.TrimSpace(reqJSON); len(body) > 0 {
+			opts := protojson.UnmarshalOptions{Resolver: resolver}
+			if perr := opts.Unmarshal(body, req); perr != nil {
+				return fmt.Errorf("prepare request: %w", perr)
+			}
 		}
 
-		var buf bytes.Buffer
-		h := &grpcurl.DefaultEventHandler{Out: &buf, Formatter: formatter}
-
-		if ierr := grpcurl.InvokeRPC(callCtx, src, conn, method, nil, h, parser.Next); ierr != nil {
+		resp := dynamicpb.NewMessage(mtd.GetOutputType().UnwrapMessage())
+		rpcPath := fmt.Sprintf("/%s/%s", mtd.GetService().GetFullyQualifiedName(), mtd.GetName())
+		if ierr := conn.Invoke(callCtx, rpcPath, req, resp); ierr != nil {
+			if st, ok := status.FromError(ierr); ok && st.Code() != codes.OK {
+				return &rpcError{status: st}
+			}
 			return fmt.Errorf("invoke %s: %w", method, ierr)
 		}
-		if h.Status != nil && h.Status.Code() != codes.OK {
-			return &rpcError{status: h.Status}
+
+		data, ferr := protojson.MarshalOptions{EmitUnpopulated: true, Resolver: resolver}.Marshal(resp)
+		if ferr != nil {
+			return fmt.Errorf("format response: %w", ferr)
 		}
-		out = json.RawMessage(bytes.TrimSpace(buf.Bytes()))
+		out = json.RawMessage(data)
 		return nil
 	})
 	return out, err
 }
 
+func findMethod(src DescriptorSource, method string) (*desc.MethodDescriptor, error) {
+	sep := strings.LastIndexAny(method, "./")
+	if sep < 0 {
+		return nil, fmt.Errorf("invalid method name %q", method)
+	}
+	svcName, mName := method[:sep], method[sep+1:]
+	d, err := src.FindSymbol(svcName)
+	if err != nil {
+		return nil, fmt.Errorf("find service: %w", err)
+	}
+	sd, ok := d.(*desc.ServiceDescriptor)
+	if !ok {
+		return nil, fmt.Errorf("%s: not a service descriptor", svcName)
+	}
+	mtd := sd.FindMethodByName(mName)
+	if mtd == nil {
+		return nil, fmt.Errorf("service %s has no method %q", svcName, mName)
+	}
+	return mtd, nil
+}
+
+type sourceResolver struct {
+	src DescriptorSource
+}
+
+func (r *sourceResolver) FindMessageByName(name protoreflect.FullName) (protoreflect.MessageType, error) {
+	d, err := r.src.FindSymbol(string(name))
+	if err != nil {
+		return nil, protoregistry.NotFound
+	}
+	md, ok := d.(*desc.MessageDescriptor)
+	if !ok {
+		return nil, protoregistry.NotFound
+	}
+	return dynamicpb.NewMessageType(md.UnwrapMessage()), nil
+}
+
+func (r *sourceResolver) FindMessageByURL(url string) (protoreflect.MessageType, error) {
+	name := url
+	if i := strings.LastIndexByte(url, '/'); i >= 0 {
+		name = url[i+1:]
+	}
+	return r.FindMessageByName(protoreflect.FullName(name))
+}
+
+func (*sourceResolver) FindExtensionByName(protoreflect.FullName) (protoreflect.ExtensionType, error) {
+	return nil, protoregistry.NotFound
+}
+
+func (*sourceResolver) FindExtensionByNumber(protoreflect.FullName, protoreflect.FieldNumber) (protoreflect.ExtensionType, error) {
+	return nil, protoregistry.NotFound
+}
+
 func (c *Client) Describe(ctx context.Context, address string) (*Schema, error) {
 	schema := &Schema{Service: DeviceService}
-	err := c.withSource(ctx, address, func(_ context.Context, _ *grpc.ClientConn, src grpcurl.DescriptorSource) error {
+	err := c.withSource(ctx, address, func(_ context.Context, _ *grpc.ClientConn, src DescriptorSource) error {
 		svc, ferr := src.FindSymbol(DeviceService)
 		if ferr != nil {
 			return fmt.Errorf("find service: %w", ferr)
@@ -125,7 +192,7 @@ func (c *Client) Describe(ctx context.Context, address string) (*Schema, error) 
 
 func (c *Client) DescribeRequest(ctx context.Context, address, oneof string) (*MessageInfo, error) {
 	var info *MessageInfo
-	err := c.withSource(ctx, address, func(_ context.Context, _ *grpc.ClientConn, src grpcurl.DescriptorSource) error {
+	err := c.withSource(ctx, address, func(_ context.Context, _ *grpc.ClientConn, src DescriptorSource) error {
 		req, ferr := src.FindSymbol(requestType)
 		if ferr != nil {
 			return fmt.Errorf("find request type: %w", ferr)
@@ -197,7 +264,7 @@ func fieldTypeName(f *desc.FieldDescriptor) string {
 	return strings.ToLower(strings.TrimPrefix(f.GetType().String(), "TYPE_"))
 }
 
-func (c *Client) withSource(ctx context.Context, address string, fn func(ctx context.Context, conn *grpc.ClientConn, src grpcurl.DescriptorSource) error) error {
+func (c *Client) withSource(ctx context.Context, address string, fn func(ctx context.Context, conn *grpc.ClientConn, src DescriptorSource) error) error {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
