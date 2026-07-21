@@ -46,7 +46,7 @@ Land work by merging the branch into `master`.
 
 - **Match the surrounding code.** Follow the existing naming, structure, and comment density.
 - **Backend layering.** Keep HTTP transport in `internal/handler`, business logic in
-  `internal/service` (no Echo types), and gRPC / grpcurl / protoreflect imports confined to
+  `internal/service` (no Echo types), and gRPC / protoreflect imports confined to
   `internal/starlink`. New endpoints go in `internal/server/routes.go`; wire new services through
   `server.New` and `handler.New`.
 - **Frontend data logic.** Pure transforms from raw device JSON into view models live in

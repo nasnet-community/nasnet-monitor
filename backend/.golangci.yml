@@ -76,8 +76,8 @@ linters:
           - errcheck
           - unparam
           - revive
-      # grpcurl's public API returns github.com/jhump/protoreflect/desc types, so
-      # the descriptor-source adapter must import that (deprecated) package.
+      # grpcreflect's server-reflection client returns github.com/jhump/protoreflect/desc
+      # types, so the descriptor-source adapter must import that (deprecated) package.
       - path: internal/starlink/
         linters:
           - staticcheck

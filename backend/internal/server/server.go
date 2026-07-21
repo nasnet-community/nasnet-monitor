@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 	"log"
-	"net/http"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
@@ -82,12 +80,5 @@ func (s *Server) registerMiddleware() {
 		},
 	}))
 
-	e.Use(echomiddleware.StaticWithConfig(echomiddleware.StaticConfig{
-		HTML5:      true,
-		Root:       "dist",
-		Filesystem: http.FS(web.Dist),
-		Skipper: func(c echo.Context) bool {
-			return strings.HasPrefix(c.Request().URL.Path, "/api/")
-		},
-	}))
+	e.Use(staticSPA(web.Assets()))
 }
