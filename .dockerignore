@@ -1,8 +1,8 @@
 # Dependencies and build output
 node_modules
 frontend/dist
-backend/internal/web/dist
-backend/nasnet-monitor
+backend/target
+backend/dist
 
 # Git and IDE
 .git

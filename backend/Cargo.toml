@@ -1,0 +1,49 @@
+[package]
+name = "nasnet-monitor"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "nasnet_monitor"
+path = "src/lib.rs"
+
+[[bin]]
+name = "nasnet-monitor"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "query"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "normalize-path"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+tonic = { version = "0.14", default-features = false, features = ["channel"] }
+prost = "0.14"
+prost-types = "0.14"
+prost-reflect = { version = "0.16", features = ["serde"] }
+tokio-stream = "0.1"
+bytes = "1"
+http = "1"
+# gzip-only fork: feature-gates the brotli codec out of the binary.
+memory-serve = { git = "https://github.com/markpash/memory-serve", rev = "9cf256f5e55d7eb806d17be771fb84dfcc0e6c5d", default-features = false }
+semver = "1"
+thiserror = "2"
+ureq = { version = "2", default-features = false, features = ["tls", "json", "gzip"] }
+
+[dev-dependencies]
+tonic = { version = "0.14", default-features = false, features = ["channel", "server", "router"] }
+tonic-reflection = "0.14"
+http-body-util = "0.1"
+tower = { version = "0.5", features = ["util"] }
+tokio-stream = { version = "0.1", features = ["net"] }
+
+[build-dependencies]
+memory-serve = { git = "https://github.com/markpash/memory-serve", rev = "9cf256f5e55d7eb806d17be771fb84dfcc0e6c5d", default-features = false }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
