@@ -11,7 +11,7 @@ COPY frontend ./frontend
 RUN npm run build
 
 # Build backend with embedded SPA
-FROM --platform=$BUILDPLATFORM golang:1.26.2-alpine AS backend
+FROM --platform=$BUILDPLATFORM golang:1.26.5-alpine AS backend
 WORKDIR /app/backend
 ARG VERSION=0.1.0
 ARG TARGETOS
