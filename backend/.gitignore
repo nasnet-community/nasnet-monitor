@@ -1,18 +1,3 @@
-# Binaries
-nasnet-monitor
-*.exe
-*.test
-*.out
-
-# Air live-reload
-tmp/
-build-log.txt
-
-# Local env
-.env
-
-# Embedded frontend build (copied in at release time)
-internal/web/dist/assets/
-
-# OS
-.DS_Store
+target
+dist/*
+!dist/index.html

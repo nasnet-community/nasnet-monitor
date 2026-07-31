@@ -10,27 +10,40 @@ COPY vite.config.ts tailwind.config.ts postcss.config.js components.json ./
 COPY frontend ./frontend
 RUN npm run build
 
-# Build backend with embedded SPA
-FROM --platform=$BUILDPLATFORM golang:1.26.2-alpine AS backend
-WORKDIR /app/backend
+# Build backend with embedded SPA (static musl binary, cross-compiled from
+# the build platform via zig so CI never compiles under QEMU emulation).
+FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:latest AS backend
+WORKDIR /app
 ARG VERSION=0.1.0
-ARG TARGETOS
 ARG TARGETARCH
-COPY backend/go.mod backend/go.sum ./
-RUN go mod download
-COPY backend/ ./
-RUN rm -rf internal/web/dist
-COPY --from=frontend /app/frontend/dist ./internal/web/dist
-RUN find internal/web/dist -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.mjs' -o -name '*.svg' -o -name '*.json' -o -name '*.txt' \) -exec gzip -9 {} +
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
-    -trimpath \
-    -ldflags="-s -w -X main.version=${VERSION}" \
-    -o /out/nasnet-monitor .
+ENV APP_VERSION=${VERSION}
+RUN case "${TARGETARCH}" in \
+      amd64) echo x86_64-unknown-linux-musl ;; \
+      arm64) echo aarch64-unknown-linux-musl ;; \
+      *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac > /rust-target \
+    && rustup target add "$(cat /rust-target)"
 
-# Minimal runtime
+# Cache dependency compilation against dummy sources.
+COPY backend/Cargo.toml backend/Cargo.lock backend/build.rs ./
+RUN mkdir -p src dist \
+    && echo 'fn main() {}' > src/main.rs \
+    && touch src/lib.rs dist/index.html \
+    && cargo zigbuild --release --target "$(cat /rust-target)" \
+    && rm -rf src dist
+
+# The real build; the memory-serve build script embeds and gzips the SPA.
+# COPY --from preserves the frontend stage's older mtimes, which would make
+# cargo skip the build-script rerun and keep the dummy dist — touch everything.
+COPY backend/src ./src
+COPY --from=frontend /app/frontend/dist ./dist
+RUN find src dist -exec touch {} + \
+    && cargo zigbuild --release --target "$(cat /rust-target)" \
+    && cp "target/$(cat /rust-target)/release/nasnet-monitor" /nasnet-monitor
+
+# Minimal runtime (TLS roots are compiled in; no CA bundle needed)
 FROM scratch
-COPY --from=backend /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=backend /out/nasnet-monitor /nasnet-monitor
+COPY --from=backend /nasnet-monitor /nasnet-monitor
 ENV HOST=0.0.0.0 \
     PORT=8080 \
     ENVIRONMENT=production \
