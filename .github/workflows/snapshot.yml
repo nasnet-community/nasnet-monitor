@@ -56,6 +56,33 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.suffix }}
           cache-to: type=gha,mode=max,scope=${{ matrix.suffix }}
 
+      - name: Export static binary
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          provenance: false
+          sbom: false
+          build-args: |
+            VERSION=main-${{ github.sha }}
+          outputs: type=local,dest=./out
+          cache-from: type=gha,scope=${{ matrix.suffix }}
+
+      - name: Stage binary
+        run: |
+          set -euo pipefail
+          BIN=$(find out -type f -name nasnet-monitor -print -quit)
+          [ -n "$BIN" ] || { echo "no binary exported" >&2; exit 1; }
+          mkdir -p bin
+          install -m 0755 "$BIN" "bin/nasnet-monitor-main-linux-${{ matrix.suffix }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: binary-${{ matrix.suffix }}
+          path: bin/nasnet-monitor-*
+          if-no-files-found: error
+
       - name: Report image size
         run: |
           set -euo pipefail
@@ -114,6 +141,20 @@ jobs:
             ( cd dist && sha256sum "${OUT}" > "${OUT}.sha256" )
           done
 
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: binary-*
+          merge-multiple: true
+          path: dist
+
+      - name: Checksum binaries
+        run: |
+          set -euo pipefail
+          cd dist
+          for BIN in nasnet-monitor-*-linux-*; do
+            sha256sum "${BIN}" > "${BIN}.sha256"
+          done
+
       - name: Publish to rolling snapshot release
         uses: softprops/action-gh-release@v2
         with:
@@ -127,6 +168,12 @@ jobs:
             Container image tars (`docker load` / RouterOS container import):
             - `nasnet-monitor-main-amd64.tar` (x86_64)
             - `nasnet-monitor-main-arm64.tar` (arm64 — MikroTik hAP ax2)
+
+            Standalone static binaries (Linux, musl — no runtime dependencies,
+            SPA embedded; `chmod +x` after downloading):
+            - `nasnet-monitor-main-linux-amd64` (x86_64)
+            - `nasnet-monitor-main-linux-arm64` (arm64)
           files: |
             dist/*.tar
             dist/*.tar.sha256
+            dist/nasnet-monitor-*-linux-*

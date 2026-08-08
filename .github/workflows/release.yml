@@ -81,6 +81,34 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.suffix }}
           cache-to: type=gha,mode=max,scope=${{ matrix.suffix }}
 
+      - name: Export static binary
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          provenance: false
+          sbom: false
+          build-args: |
+            VERSION=${{ steps.version.outputs.value }}
+          outputs: type=local,dest=./out
+          cache-from: type=gha,scope=${{ matrix.suffix }}
+
+      - name: Stage binary
+        run: |
+          set -euo pipefail
+          BIN=$(find out -type f -name nasnet-monitor -print -quit)
+          [ -n "$BIN" ] || { echo "no binary exported" >&2; exit 1; }
+          mkdir -p bin
+          install -m 0755 "$BIN" \
+            "bin/nasnet-monitor-${{ steps.version.outputs.value }}-linux-${{ matrix.suffix }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: binary-${{ matrix.suffix }}
+          path: bin/nasnet-monitor-*
+          if-no-files-found: error
+
       - name: Report image size
         run: |
           set -euo pipefail
@@ -157,7 +185,21 @@ jobs:
             ( cd dist && sha256sum "${OUT}" > "${OUT}.sha256" )
           done
 
-      - name: Attach tars to the GitHub Release
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: binary-*
+          merge-multiple: true
+          path: dist
+
+      - name: Checksum binaries
+        run: |
+          set -euo pipefail
+          cd dist
+          for BIN in nasnet-monitor-*-linux-*; do
+            sha256sum "${BIN}" > "${BIN}.sha256"
+          done
+
+      - name: Attach tars and binaries to the GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -168,6 +210,12 @@ jobs:
             Container image tars (`docker load` / RouterOS container import):
             - `nasnet-monitor-*-amd64.tar` (x86_64)
             - `nasnet-monitor-*-arm64.tar` (arm64 — MikroTik hAP ax2)
+
+            Standalone static binaries (Linux, musl — no runtime dependencies,
+            SPA embedded; `chmod +x` after downloading):
+            - `nasnet-monitor-*-linux-amd64` (x86_64)
+            - `nasnet-monitor-*-linux-arm64` (arm64)
           files: |
             dist/*.tar
             dist/*.tar.sha256
+            dist/nasnet-monitor-*-linux-*
