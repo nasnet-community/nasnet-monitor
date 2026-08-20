@@ -9,14 +9,23 @@ const TITLE = {
   unreachable: 'Starlink router not reachable',
 }
 
-function routerUnavailableBody(state: 'bypass' | 'unreachable', address: string): string {
-  return state === 'bypass'
-    ? 'Connected devices, Wi-Fi settings and the speed test are served by the Starlink router, so they are unavailable while it is bridged. Dish telemetry is unaffected.'
-    : `Nothing answered at ${address}. This is expected in bypass mode or if the router has been removed. Dish telemetry is unaffected.`
+function routerUnavailableBody(
+  state: 'bypass' | 'unreachable',
+  address: string,
+  error: string | null
+): string {
+  if (state === 'bypass') {
+    return 'Connected devices, Wi-Fi settings and the speed test are served by the Starlink router, so they are unavailable while it is bridged. Dish telemetry is unaffected.'
+  }
+  const detail = error
+    ? `${address}: ${error}`
+    : `Nothing answered at ${address}. This is expected in bypass mode or if the router has been removed.`
+  return `${detail} Dish telemetry is unaffected.`
 }
 
 export function RouterUnavailable({ compact = false }: { compact?: boolean }) {
-  const { routerState, routerAddress, recheck } = useRouterAvailability()
+  const { routerState, routerAddress, routerError, routerChecking, recheck } =
+    useRouterAvailability()
   if (routerState !== 'bypass' && routerState !== 'unreachable') return null
 
   return (
@@ -33,15 +42,16 @@ export function RouterUnavailable({ compact = false }: { compact?: boolean }) {
       <div className="min-w-0 flex-1">
         <div className="text-[14px] font-semibold">{TITLE[routerState]}</div>
         <p className="text-[14px] leading-[1.5] text-muted-foreground">
-          {routerUnavailableBody(routerState, routerAddress)}
+          {routerUnavailableBody(routerState, routerAddress, routerError)}
         </p>
       </div>
       <Button
         variant="outline"
         onClick={recheck}
+        disabled={routerChecking}
         className="h-auto shrink-0 rounded-[10px] px-3 py-[7px] text-[12.5px]"
       >
-        Re-check
+        {routerChecking ? 'Checking…' : 'Re-check'}
       </Button>
     </div>
   )

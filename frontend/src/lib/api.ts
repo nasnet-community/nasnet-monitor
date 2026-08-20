@@ -50,11 +50,12 @@ interface Envelope<T> {
   error?: string
 }
 
-async function unwrap<T>(res: Response): Promise<T | undefined> {
+async function unwrap<T>(res: Response, signal?: AbortSignal): Promise<T | undefined> {
   let env: Envelope<T> | undefined
   try {
     env = (await res.json()) as Envelope<T>
   } catch {
+    if (signal?.aborted) throw new ApiError(REQUEST_TIMED_OUT, 0)
     env = undefined
   }
 
@@ -78,23 +79,25 @@ async function post<T>(
 ): Promise<T | undefined> {
   const controller = timeoutMs ? new AbortController() : null
   const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : undefined
-  let res: Response
   try {
-    res = await fetch(path, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(address ? { [DISH_HEADER]: address } : {}),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      ...(controller ? { signal: controller.signal } : {}),
-    })
-  } catch {
-    throw new ApiError(controller?.signal.aborted ? REQUEST_TIMED_OUT : SERVER_ISSUE, 0)
+    let res: Response
+    try {
+      res = await fetch(path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(address ? { [DISH_HEADER]: address } : {}),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        ...(controller ? { signal: controller.signal } : {}),
+      })
+    } catch {
+      throw new ApiError(controller?.signal.aborted ? REQUEST_TIMED_OUT : SERVER_ISSUE, 0)
+    }
+    return await unwrap<T>(res, controller?.signal)
   } finally {
     clearTimeout(timer)
   }
-  return unwrap<T>(res)
 }
 
 async function get<T>(path: string): Promise<T | undefined> {

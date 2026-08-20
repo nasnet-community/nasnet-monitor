@@ -120,3 +120,41 @@ describe('ApiError', () => {
     expect((err as ApiError).message).toBe('Refused.')
   })
 })
+
+describe('request timeout', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('aborts when the response body never settles', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => ({
+        ok: true,
+        status: 200,
+        json: () =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => reject(new Error('aborted')))
+          }),
+      }))
+    )
+    const err = await getWifiConfig('192.168.1.1:9000', 20).catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiError)
+    expect((err as ApiError).message).toBe('The device did not respond in time.')
+  })
+
+  it('classifies a stalled body as unreachable rather than hanging the probe', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => ({
+        ok: true,
+        status: 200,
+        json: () =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => reject(new Error('aborted')))
+          }),
+      }))
+    )
+    expect((await probeRouter('192.168.1.1:9000')).state).toBe('unreachable')
+  }, 10_000)
+})

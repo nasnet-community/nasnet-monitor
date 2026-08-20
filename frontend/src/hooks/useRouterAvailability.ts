@@ -6,15 +6,16 @@ import { useAppStore } from '@/store/appStore'
 const OK_INTERVAL_MS = 60_000
 const BACKOFF_MS = [15_000, 30_000, 60_000, 300_000]
 
-let inFlight: Promise<RouterProbe> | null = null
+const inFlight = new Map<string, Promise<RouterProbe>>()
 
 function runProbe(address: string): Promise<RouterProbe> {
-  if (!inFlight) {
-    inFlight = probeRouter(address).finally(() => {
-      inFlight = null
-    })
-  }
-  return inFlight
+  const existing = inFlight.get(address)
+  if (existing) return existing
+  const pending = probeRouter(address).finally(() => {
+    inFlight.delete(address)
+  })
+  inFlight.set(address, pending)
+  return pending
 }
 
 export function useRouterProbe() {
@@ -31,9 +32,16 @@ export function useRouterProbe() {
     let timer: ReturnType<typeof setTimeout>
     let failures = 0
     let lastChecked = 0
+    let probing = false
 
     const tick = async () => {
-      const result = await runProbe(address)
+      probing = true
+      let result: RouterProbe
+      try {
+        result = await runProbe(address)
+      } finally {
+        probing = false
+      }
       if (cancelled) return
       lastChecked = Date.now()
       useAppStore.getState().setRouterState(result.state, result.error)
@@ -49,6 +57,7 @@ export function useRouterProbe() {
 
     const onVisible = () => {
       if (document.visibilityState !== 'visible') return
+      if (probing) return
       if (Date.now() - lastChecked < OK_INTERVAL_MS) return
       clearTimeout(timer)
       void tick()
@@ -68,6 +77,7 @@ export interface RouterAvailability {
   routerState: RouterState
   routerAvailable: boolean
   routerConfigurable: boolean
+  routerChecking: boolean
   routerError: string | null
   routerAddress: string
   recheck: () => void
@@ -76,11 +86,11 @@ export interface RouterAvailability {
 export function useRouterAvailability(): RouterAvailability {
   const routerState = useAppStore((s) => s.routerState)
   const routerError = useAppStore((s) => s.routerError)
+  const routerChecking = useAppStore((s) => s.routerChecking)
   const routerAddress = useAppStore((s) => s.routerAddress)
   const requestRouterCheck = useAppStore((s) => s.requestRouterCheck)
 
   const recheck = useCallback(() => {
-    useAppStore.getState().setRouterState('unknown', null)
     requestRouterCheck()
   }, [requestRouterCheck])
 
@@ -88,6 +98,7 @@ export function useRouterAvailability(): RouterAvailability {
     routerState,
     routerAvailable: routerState !== 'bypass' && routerState !== 'unreachable',
     routerConfigurable: routerState === 'unknown' || routerState === 'available',
+    routerChecking,
     routerError,
     routerAddress: routerAddressOrDefault(routerAddress),
     recheck,

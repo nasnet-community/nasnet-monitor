@@ -103,7 +103,8 @@ export function SettingsScreen() {
   const { status } = useLiveTelemetry()
   const routerAddress = useAppStore((s) => s.routerAddress)
   const router = routerAddressOrDefault(routerAddress)
-  const { routerState, routerAvailable, routerConfigurable, recheck } = useRouterAvailability()
+  const { routerState, routerAvailable, routerConfigurable, routerChecking, recheck } =
+    useRouterAvailability()
 
   const [wifiName, setWifiName] = useState<string | null>(null)
   const [bypass, setBypass] = useState<boolean | null>(null)
@@ -321,14 +322,15 @@ export function SettingsScreen() {
                   routerAvailable ? 'text-muted-foreground' : 'text-status-warn'
                 )}
               >
-                {ROUTER_STATUS_LABEL[routerState]}
+                {routerChecking ? 'Checking…' : ROUTER_STATUS_LABEL[routerState]}
               </span>
               <Button
                 variant="outline"
                 onClick={recheck}
+                disabled={routerChecking}
                 className="h-auto rounded-[9px] px-2.5 py-[5px] text-[12px]"
               >
-                Re-check
+                {routerChecking ? 'Checking…' : 'Re-check'}
               </Button>
             </div>
           }

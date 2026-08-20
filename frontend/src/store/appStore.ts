@@ -14,6 +14,7 @@ interface AppState {
   rfInhibited: boolean
   routerState: RouterState
   routerError: string | null
+  routerChecking: boolean
   routerCheckNonce: number
 
   setTheme: (theme: Theme) => void
@@ -47,6 +48,7 @@ export const useAppStore = create<AppState>()(
       rfInhibited: false,
       routerState: 'unknown',
       routerError: null,
+      routerChecking: false,
       routerCheckNonce: 0,
 
       setTheme: (theme) => {
@@ -66,9 +68,12 @@ export const useAppStore = create<AppState>()(
       setRouterAddress: (routerAddress) => set({ routerAddress }),
       setConnected: (connected) => set({ connected }),
       setRfInhibited: (rfInhibited) => set({ rfInhibited }),
-      setRouterState: (routerState, routerError) => set({ routerState, routerError }),
-      requestRouterCheck: () => set((s) => ({ routerCheckNonce: s.routerCheckNonce + 1 })),
-      disconnect: () => set({ connected: false, routerState: 'unknown', routerError: null }),
+      setRouterState: (routerState, routerError) =>
+        set({ routerState, routerError, routerChecking: false }),
+      requestRouterCheck: () =>
+        set((s) => ({ routerCheckNonce: s.routerCheckNonce + 1, routerChecking: true })),
+      disconnect: () =>
+        set({ connected: false, routerState: 'unknown', routerError: null, routerChecking: false }),
     }),
     {
       name: 'nasnet-monitor',
