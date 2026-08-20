@@ -20,6 +20,7 @@ export interface NavItem {
   subtitle: string
   path: string
   icon: LucideIcon
+  requiresRouter?: boolean
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -27,7 +28,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'stats', label: 'Statistics', title: 'Statistics', subtitle: 'Speed, latency and uptime trends', path: '/statistics', icon: TrendingUp },
   { id: 'events', label: 'Events', title: 'Events & outages', subtitle: 'Connectivity interruptions recorded by the kit', path: '/events', icon: Bell },
   { id: 'speedtest', label: 'Speed test', title: 'Speed test', subtitle: 'Measure your live download, upload and latency', path: '/speed-test', icon: Gauge },
-  { id: 'network', label: 'Network', title: 'Network', subtitle: 'Devices connected to Nasnet-Home', path: '/network', icon: Radio },
+  { id: 'network', label: 'Network', title: 'Network', subtitle: 'Devices connected to Nasnet-Home', path: '/network', icon: Radio, requiresRouter: true },
   { id: 'obstructions', label: 'Obstructions', title: 'Obstructions', subtitle: 'Sky coverage and signal interruptions', path: '/obstructions', icon: CircleDot },
   { id: 'alignment', label: 'Alignment', title: 'Alignment', subtitle: 'Kit orientation and aim quality', path: '/alignment', icon: Crosshair },
   { id: 'diagnostics', label: 'Diagnostics', title: 'Diagnostics', subtitle: 'Dish diagnostic snapshot and radio telemetry', path: '/diagnostics', icon: Stethoscope },

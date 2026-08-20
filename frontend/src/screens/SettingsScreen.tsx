@@ -6,7 +6,9 @@ import { Modal } from '@/components/ui/modal'
 import { Switch } from '@/components/ui/switch'
 import { useDishControl } from '@/hooks/useDishControl'
 import { useLiveTelemetry } from '@/hooks/useLiveTelemetry'
+import { useRouterAvailability } from '@/hooks/useRouterAvailability'
 import { useSettings } from '@/hooks/useSettings'
+import { cn } from '@/lib/utils'
 import {
   checkForUpdate as apiCheckForUpdate,
   factoryReset as apiFactoryReset,
@@ -84,6 +86,14 @@ function timeToMinutes(value: string): number | null {
   return h * 60 + m
 }
 
+const ROUTER_STATUS_LABEL = {
+  unknown: 'Checking…',
+  available: 'Connected',
+  bypass: 'Bypass mode',
+  restricted: 'Restricted',
+  unreachable: 'Not reachable',
+}
+
 type RenamePhase = 'form' | 'reconnect' | 'done'
 
 export function SettingsScreen() {
@@ -93,6 +103,7 @@ export function SettingsScreen() {
   const { status } = useLiveTelemetry()
   const routerAddress = useAppStore((s) => s.routerAddress)
   const router = routerAddressOrDefault(routerAddress)
+  const { routerState, routerAvailable, routerConfigurable, recheck } = useRouterAvailability()
 
   const [wifiName, setWifiName] = useState<string | null>(null)
   const [bypass, setBypass] = useState<boolean | null>(null)
@@ -128,6 +139,7 @@ export function SettingsScreen() {
   const scheduleBusy = busy === 'powersave'
 
   useEffect(() => {
+    if (routerState !== 'available') return
     let cancelled = false
     apiGetWifiName(router)
       .then((name) => {
@@ -142,7 +154,7 @@ export function SettingsScreen() {
     return () => {
       cancelled = true
     }
-  }, [router])
+  }, [router, routerState])
 
   useEffect(() => {
     let cancelled = false
@@ -299,11 +311,38 @@ export function SettingsScreen() {
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-[22px]">
       <Section title="Network">
         <Row
+          title="Starlink router"
+          description={router}
+          control={
+            <div className="flex items-center justify-end gap-2.5">
+              <span
+                className={cn(
+                  'text-[13.5px]',
+                  routerAvailable ? 'text-muted-foreground' : 'text-status-warn'
+                )}
+              >
+                {ROUTER_STATUS_LABEL[routerState]}
+              </span>
+              <Button
+                variant="outline"
+                onClick={recheck}
+                className="h-auto rounded-[9px] px-2.5 py-[5px] text-[12px]"
+              >
+                Re-check
+              </Button>
+            </div>
+          }
+        />
+        <Row
           title="Wi-Fi name"
-          description="Managed in the Starlink app"
+          description={
+            routerAvailable ? 'Managed in the Starlink app' : 'Served by the Starlink router'
+          }
           divider={false}
           control={
-            <div className="truncate text-[13.5px] text-muted-foreground">{wifiName ?? '—'}</div>
+            <div className="truncate text-[13.5px] text-muted-foreground">
+              {routerAvailable ? (wifiName ?? '—') : 'Unavailable'}
+            </div>
           }
         />
       </Section>
@@ -314,7 +353,15 @@ export function SettingsScreen() {
           description="Router bridge mode — change via Factory reset"
           control={
             <div className="text-[13.5px] text-muted-foreground">
-              {bypass === null ? '—' : bypass ? 'On' : 'Off'}
+              {routerState === 'bypass'
+                ? 'On'
+                : routerState === 'unreachable'
+                  ? 'Unavailable'
+                  : bypass === null
+                    ? '—'
+                    : bypass
+                      ? 'On'
+                      : 'Off'}
             </div>
           }
         />
@@ -428,12 +475,18 @@ export function SettingsScreen() {
             </Button>
             <Button
               variant="destructive"
+              disabled={!routerConfigurable}
               onClick={openRename}
               className="h-auto flex-1 rounded-[11px] py-[13px] text-[13.5px]"
             >
               Factory reset
             </Button>
           </div>
+          {!routerConfigurable && (
+            <div className="text-[12.5px] text-faint">
+              Factory reset is handled by the Starlink router, which is unavailable.
+            </div>
+          )}
           {actionError && <div className="text-[12.5px] text-status-danger">{actionError}</div>}
         </div>
       </Section>
