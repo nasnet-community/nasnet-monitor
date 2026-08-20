@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+import type { RouterState } from '@/lib/api'
 import type { AppSettings, Theme } from '@/data/types'
 
 interface AppState {
@@ -11,6 +12,10 @@ interface AppState {
   routerAddress: string
   connected: boolean
   rfInhibited: boolean
+  routerState: RouterState
+  routerError: string | null
+  routerChecking: boolean
+  routerCheckNonce: number
 
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
@@ -20,6 +25,8 @@ interface AppState {
   setRouterAddress: (address: string) => void
   setConnected: (on: boolean) => void
   setRfInhibited: (on: boolean) => void
+  setRouterState: (state: RouterState, error: string | null) => void
+  requestRouterCheck: () => void
   disconnect: () => void
 }
 
@@ -39,6 +46,10 @@ export const useAppStore = create<AppState>()(
       routerAddress: '',
       connected: false,
       rfInhibited: false,
+      routerState: 'unknown',
+      routerError: null,
+      routerChecking: false,
+      routerCheckNonce: 0,
 
       setTheme: (theme) => {
         applyThemeAttribute(theme)
@@ -57,7 +68,12 @@ export const useAppStore = create<AppState>()(
       setRouterAddress: (routerAddress) => set({ routerAddress }),
       setConnected: (connected) => set({ connected }),
       setRfInhibited: (rfInhibited) => set({ rfInhibited }),
-      disconnect: () => set({ connected: false }),
+      setRouterState: (routerState, routerError) =>
+        set({ routerState, routerError, routerChecking: false }),
+      requestRouterCheck: () =>
+        set((s) => ({ routerCheckNonce: s.routerCheckNonce + 1, routerChecking: true })),
+      disconnect: () =>
+        set({ connected: false, routerState: 'unknown', routerError: null, routerChecking: false }),
     }),
     {
       name: 'nasnet-monitor',
