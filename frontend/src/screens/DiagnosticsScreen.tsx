@@ -1,9 +1,11 @@
-import { AlertTriangle, Info, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useMemo } from 'react'
 
+import { RouterUnavailable } from '@/components/RouterUnavailable'
 import { Card } from '@/components/ui/card'
+import { Notice } from '@/components/ui/notice'
 import { useDiagnostics } from '@/hooks/useDiagnostics'
-import { cn } from '@/lib/utils'
+import { useRouterAvailability } from '@/hooks/useRouterAvailability'
 
 interface Row {
   label: string
@@ -70,23 +72,6 @@ function RadioBand({ stats }: { stats: Record<string, unknown> }) {
   )
 }
 
-function Notice({ tone, children }: { tone: 'info' | 'warn'; children: React.ReactNode }) {
-  const Icon = tone === 'warn' ? AlertTriangle : Info
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-2.5 rounded-xl border px-5 py-3 text-[14px] font-medium',
-        tone === 'warn'
-          ? 'border-red-500/30 bg-red-500/10 text-red-400'
-          : 'border-border bg-card/60 text-muted-foreground'
-      )}
-    >
-      <Icon className="h-4 w-4 shrink-0" strokeWidth={1.9} />
-      {children}
-    </div>
-  )
-}
-
 function Placeholder({ loading, idle }: { loading: boolean; idle: string }) {
   return (
     <div className="flex items-center gap-2 text-[13px] text-faint">
@@ -98,6 +83,7 @@ function Placeholder({ loading, idle }: { loading: boolean; idle: string }) {
 
 export function DiagnosticsScreen() {
   const { diagnostics, diagnosticsError, radio, radioError, loading } = useDiagnostics()
+  const { routerAvailable } = useRouterAvailability()
   const rows = useMemo(() => (diagnostics ? flatten(diagnostics) : []), [diagnostics])
 
   return (
@@ -129,7 +115,9 @@ export function DiagnosticsScreen() {
         <div className="mb-[18px] mt-1 text-[12.5px] text-faint">
           Per-band radio RX/TX, thermal and antenna stats from the router.
         </div>
-        {radio.length > 0 ? (
+        {!routerAvailable ? (
+          <RouterUnavailable compact />
+        ) : radio.length > 0 ? (
           <div className="flex flex-col gap-6">
             {radio.map((stats, i) => (
               <RadioBand key={(stats.band as string) ?? i} stats={stats} />

@@ -15,7 +15,7 @@ path = "src/main.rs"
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "query"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["cors", "normalize-path"] }
+tower-http = { version = "0.7", features = ["cors", "normalize-path"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 tonic = { version = "0.14", default-features = false, features = ["channel"] }
