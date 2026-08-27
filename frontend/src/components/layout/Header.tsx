@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { NAV_ITEMS, type NavItem } from '@/constants/navigation'
+import { useRouterAvailability } from '@/hooks/useRouterAvailability'
 import { useDeviceState } from '@/hooks/useDeviceState'
 import { useStats } from '@/hooks/useStats'
 import { cn } from '@/lib/utils'
@@ -27,6 +28,7 @@ function useActiveNav() {
 function MobileNav({ active }: { active: NavItem }) {
   const navigate = useNavigate()
   const disconnect = useAppStore((s) => s.disconnect)
+  const { routerAvailable } = useRouterAvailability()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -38,11 +40,14 @@ function MobileNav({ active }: { active: NavItem }) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[210px]">
-        {NAV_ITEMS.map(({ id, label, path, icon: Icon }) => (
+        {NAV_ITEMS.map(({ id, label, path, icon: Icon, requiresRouter }) => (
           <DropdownMenuItem
             key={id}
             onSelect={() => navigate(path)}
-            className={cn(active.id === id && 'bg-[var(--nav-active)] text-foreground')}
+            className={cn(
+              active.id === id && 'bg-[var(--nav-active)] text-foreground',
+              requiresRouter && !routerAvailable && 'opacity-45'
+            )}
           >
             <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
             {label}

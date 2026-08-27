@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 import { NAV_ITEMS } from '@/constants/navigation'
 import { useDeviceState } from '@/hooks/useDeviceState'
+import { useRouterAvailability } from '@/hooks/useRouterAvailability'
 import { useSettings } from '@/hooks/useSettings'
 import { cn } from '@/lib/utils'
 
@@ -42,21 +43,25 @@ function DeviceCard() {
 }
 
 export function Sidebar() {
+  const { routerAvailable } = useRouterAvailability()
+
   return (
     <aside className="hidden w-[248px] shrink-0 flex-col gap-1.5 border-r border-border bg-surface px-4 py-[22px] md:flex md:h-screen md:overflow-y-auto">
       <BrandMark />
 
-      {NAV_ITEMS.map(({ id, label, path, icon: Icon }) => (
+      {NAV_ITEMS.map(({ id, label, path, icon: Icon, requiresRouter }) => (
         <NavLink
           key={id}
           to={path}
           end={path === '/'}
+          title={requiresRouter && !routerAvailable ? 'Requires the Starlink router' : undefined}
           className={({ isActive }) =>
             cn(
               'flex w-full items-center gap-3 rounded-[11px] px-[13px] py-[11px] text-sm font-medium transition-colors',
               isActive
                 ? 'bg-[var(--nav-active)] text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+              requiresRouter && !routerAvailable && 'opacity-45'
             )
           }
         >
