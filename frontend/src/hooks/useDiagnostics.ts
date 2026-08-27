@@ -4,6 +4,12 @@ import { fetchDishDiagnostics, fetchRadioStats, routerAddressOrDefault } from '@
 import { useAppStore } from '@/store/appStore'
 
 const POLL_MS = 15000
+const RADIO_TIMEOUT_MS = 5000
+
+function routerReachable(): boolean {
+  const state = useAppStore.getState().routerState
+  return state !== 'bypass' && state !== 'unreachable'
+}
 
 export interface DiagnosticsData {
   diagnostics: Record<string, unknown> | null
@@ -44,8 +50,13 @@ export function useDiagnostics(): DiagnosticsData {
           setDiagnosticsError(message(err, 'Could not read the diagnostic snapshot from the dish.'))
         })
 
-    const pullRadio = () =>
-      fetchRadioStats(router)
+    const pullRadio = () => {
+      if (!routerReachable()) {
+        setRadio([])
+        setRadioError(null)
+        return Promise.resolve()
+      }
+      return fetchRadioStats(router, RADIO_TIMEOUT_MS)
         .then((data) => {
           if (cancelled) return
           setRadio(data)
@@ -56,16 +67,17 @@ export function useDiagnostics(): DiagnosticsData {
           setRadio([])
           setRadioError(message(err, 'Could not read radio telemetry from the router.'))
         })
+    }
 
     const tick = async (initial: boolean) => {
       if (cancelled) return
+      if (initial) setLoading(true)
       await Promise.all([pullDiagnostics(), pullRadio()])
       if (cancelled) return
       if (initial) setLoading(false)
       timer = setTimeout(() => void tick(false), POLL_MS)
     }
 
-    setLoading(true)
     void tick(true)
     return () => {
       cancelled = true

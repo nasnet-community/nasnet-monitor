@@ -266,6 +266,7 @@ function FitCamera() {
     const aspect = size.width / Math.max(1, size.height)
     const dist = camera.position.distanceTo(CAMERA_TARGET)
     const halfWidth = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2)) * aspect * dist
+    // eslint-disable-next-line react-hooks/immutability -- three.js cameras are driven by mutation
     camera.zoom = Math.min(1, halfWidth / SCENE_HALF_WIDTH)
     camera.updateProjectionMatrix()
   }, [camera, size])

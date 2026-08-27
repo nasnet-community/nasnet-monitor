@@ -12,6 +12,18 @@ const DISH_HEADER = 'X-Dish-Address'
 const SERVER_ISSUE =
   'There is an issue connecting to the server. Please make sure it is running and try again.'
 
+const REQUEST_TIMED_OUT = 'The device did not respond in time.'
+
+export class ApiError extends Error {
+  readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
 export const DEFAULT_DISH_HOST = '192.168.100.1'
 export const DISH_PORT = '9200'
 export const DEFAULT_DISH_ADDRESS = `${DEFAULT_DISH_HOST}:${DISH_PORT}`
@@ -38,41 +50,54 @@ interface Envelope<T> {
   error?: string
 }
 
-async function unwrap<T>(res: Response): Promise<T | undefined> {
+async function unwrap<T>(res: Response, signal?: AbortSignal): Promise<T | undefined> {
   let env: Envelope<T> | undefined
   try {
     env = (await res.json()) as Envelope<T>
   } catch {
+    if (signal?.aborted) throw new ApiError(REQUEST_TIMED_OUT, 0)
     env = undefined
   }
 
   if (!res.ok || env?.error) {
     if (env?.error || env?.message) {
-      throw new Error(env.error || env.message)
+      throw new ApiError(env.error || env.message, res.status)
     }
     if (res.status >= 500) {
-      throw new Error(SERVER_ISSUE)
+      throw new ApiError(SERVER_ISSUE, res.status)
     }
-    throw new Error(`request failed (${res.status})`)
+    throw new ApiError(`request failed (${res.status})`, res.status)
   }
   return env?.data
 }
 
-async function post<T>(path: string, address: string, body?: unknown): Promise<T | undefined> {
-  let res: Response
+async function post<T>(
+  path: string,
+  address: string,
+  body?: unknown,
+  timeoutMs?: number
+): Promise<T | undefined> {
+  const controller = timeoutMs ? new AbortController() : null
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : undefined
   try {
-    res = await fetch(path, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(address ? { [DISH_HEADER]: address } : {}),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
-  } catch {
-    throw new Error(SERVER_ISSUE)
+    let res: Response
+    try {
+      res = await fetch(path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(address ? { [DISH_HEADER]: address } : {}),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        ...(controller ? { signal: controller.signal } : {}),
+      })
+    } catch {
+      throw new ApiError(controller?.signal.aborted ? REQUEST_TIMED_OUT : SERVER_ISSUE, 0)
+    }
+    return await unwrap<T>(res, controller?.signal)
+  } finally {
+    clearTimeout(timer)
   }
-  return unwrap<T>(res)
 }
 
 async function get<T>(path: string): Promise<T | undefined> {
@@ -80,7 +105,7 @@ async function get<T>(path: string): Promise<T | undefined> {
   try {
     res = await fetch(path)
   } catch {
-    throw new Error(SERVER_ISSUE)
+    throw new ApiError(SERVER_ISSUE, 0)
   }
   return unwrap<T>(res)
 }
@@ -120,11 +145,15 @@ export async function fetchObstructionMap(
   return data?.dishGetObstructionMap
 }
 
-export async function fetchRadioStats(address: string): Promise<Record<string, unknown>[]> {
+export async function fetchRadioStats(
+  address: string,
+  timeoutMs?: number
+): Promise<Record<string, unknown>[]> {
   const data = await post<{ getRadioStats?: { radioStats?: Record<string, unknown>[] } }>(
     '/api/dish/handle',
     address,
-    { request: { get_radio_stats: {} } }
+    { request: { get_radio_stats: {} } },
+    timeoutMs
   )
   return data?.getRadioStats?.radioStats ?? []
 }
@@ -144,10 +173,13 @@ export async function fetchDishDiagnostics(
   return (firstObject as Record<string, unknown> | undefined) ?? data
 }
 
-export async function fetchWifiClients(address: string): Promise<WifiClientsResult> {
+export async function fetchWifiClients(
+  address: string,
+  timeoutMs?: number
+): Promise<WifiClientsResult> {
   const data = await post<{
     wifiGetClients?: { clients?: WifiClient[]; hasClientIndex?: boolean; clientIndex?: number }
-  }>('/api/dish/handle', address, { request: { wifi_get_clients: {} } })
+  }>('/api/dish/handle', address, { request: { wifi_get_clients: {} } }, timeoutMs)
   const r = data?.wifiGetClients
   return {
     clients: r?.clients ?? [],
@@ -228,13 +260,39 @@ export async function setPowerSave(
   })
 }
 
-export async function getWifiConfig(address: string): Promise<Record<string, unknown> | undefined> {
+export async function getWifiConfig(
+  address: string,
+  timeoutMs?: number
+): Promise<Record<string, unknown> | undefined> {
   const data = await post<{ wifiGetConfig?: { wifiConfig?: Record<string, unknown> } }>(
     '/api/dish/handle',
     address,
-    { request: { wifi_get_config: {} } }
+    { request: { wifi_get_config: {} } },
+    timeoutMs
   )
   return data?.wifiGetConfig?.wifiConfig
+}
+
+export type RouterState = 'unknown' | 'available' | 'bypass' | 'restricted' | 'unreachable'
+
+export interface RouterProbe {
+  state: RouterState
+  error: string | null
+}
+
+const PROBE_TIMEOUT_MS = 3000
+
+export async function probeRouter(address: string): Promise<RouterProbe> {
+  try {
+    const config = await getWifiConfig(address, PROBE_TIMEOUT_MS)
+    const bypass = config ? findBoolField(config, 'bypassMode') : undefined
+    return { state: bypass === true ? 'bypass' : 'available', error: null }
+  } catch (err) {
+    const status = err instanceof ApiError ? err.status : 0
+    const error = err instanceof Error ? err.message : 'Could not reach the Starlink router.'
+    if (status === 403 || status === 409) return { state: 'restricted', error }
+    return { state: 'unreachable', error }
+  }
 }
 
 export async function getWifiSetupComplete(address: string): Promise<boolean | undefined> {
