@@ -1,13 +1,18 @@
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, Clock } from 'lucide-react'
 
+import { RouterUnavailable } from '@/components/RouterUnavailable'
 import { SpeedTestScene } from '@/components/speedtest/SpeedTestScene'
 import { useLiveTelemetry } from '@/hooks/useLiveTelemetry'
+import { useRouterAvailability } from '@/hooks/useRouterAvailability'
 import { useSpeedtest, type SpeedtestMode } from '@/hooks/useSpeedtest'
 import { cn } from '@/lib/utils'
 
-function usePathDetail(mode: SpeedtestMode, live: boolean) {
+function usePathDetail(mode: SpeedtestMode, live: boolean, available: boolean) {
   const { status } = useLiveTelemetry()
+  if (!available) {
+    return { source: '—', server: '—', loss: '—' }
+  }
   if (mode === 'router') {
     return { source: live ? 'Router' : 'Simulated', server: 'Nasnet-Home', loss: '0.0%' }
   }
@@ -21,9 +26,11 @@ function usePathDetail(mode: SpeedtestMode, live: boolean) {
 function SegmentedToggle({
   mode,
   onChange,
+  disabled,
 }: {
   mode: SpeedtestMode
   onChange: (m: SpeedtestMode) => void
+  disabled: boolean
 }) {
   const opts: { id: SpeedtestMode; label: string }[] = [
     { id: 'router', label: 'Device to Router' },
@@ -35,9 +42,10 @@ function SegmentedToggle({
         <button
           key={o.id}
           type="button"
+          disabled={disabled}
           onClick={() => onChange(o.id)}
           className={cn(
-            'rounded-full px-3.5 py-1.5 text-[14px] font-semibold transition-colors sm:px-4 sm:text-[15px] md:text-[14px]',
+            'rounded-full px-3.5 py-1.5 text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-[15px] md:text-[14px]',
             mode === o.id
               ? 'bg-foreground text-background'
               : 'text-muted-foreground hover:text-foreground'
@@ -86,7 +94,8 @@ function Readout({ label, value }: { label: string; value: string }) {
 export function SpeedTestScreen() {
   const [mode, setMode] = useState<SpeedtestMode>('internet')
   const { phase, reading, errorMsg, start, reset, live } = useSpeedtest()
-  const detail = usePathDetail(mode, live)
+  const { routerAvailable } = useRouterAvailability()
+  const detail = usePathDetail(mode, live, routerAvailable)
 
   const changeMode = (m: SpeedtestMode) => {
     if (m === mode) return
@@ -105,7 +114,13 @@ export function SpeedTestScreen() {
 
   return (
     <div className="mx-auto flex min-h-full w-full flex-col items-center justify-center gap-5 py-1">
-      <SegmentedToggle mode={mode} onChange={changeMode} />
+      <SegmentedToggle mode={mode} onChange={changeMode} disabled={!routerAvailable} />
+
+      {!routerAvailable && (
+        <div className="w-full max-w-[560px]">
+          <RouterUnavailable compact />
+        </div>
+      )}
 
       <div className="relative h-[clamp(200px,38vh,320px)] w-full">
         <SpeedTestScene running={running} />
@@ -123,7 +138,7 @@ export function SpeedTestScreen() {
       <button
         type="button"
         onClick={() => start(mode)}
-        disabled={running}
+        disabled={running || !routerAvailable}
         className="h-12 w-full max-w-[420px] rounded-2xl bg-foreground text-[15px] font-semibold text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {buttonLabel}

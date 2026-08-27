@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { ChevronRight, EthernetPort, Plus, Router, Wifi } from 'lucide-react'
 
+import { RouterUnavailable } from '@/components/RouterUnavailable'
 import { DeviceDetailModal, NodeDetailModal } from '@/components/network/DetailModals'
 import { NetworkHero } from '@/components/network/NetworkHero'
 import { Card } from '@/components/ui/card'
 import { useDevices } from '@/hooks/useDevices'
+import { useRouterAvailability } from '@/hooks/useRouterAvailability'
 import type { NetworkDevice, NetworkNode } from '@/data/types'
 import { cn } from '@/lib/utils'
 
@@ -128,6 +130,7 @@ function NodesTab({ node, onSelect }: { node: NetworkNode; onSelect: () => void 
 
 export function NetworkScreen() {
   const { devices, node, nodeCount, clientsError } = useDevices()
+  const { routerAvailable } = useRouterAvailability()
   const [tab, setTab] = useState<Tab>('devices')
   const [selectedDevice, setSelectedDevice] = useState<NetworkDevice | null>(null)
   const [nodeOpen, setNodeOpen] = useState(false)
@@ -136,6 +139,14 @@ export function NetworkScreen() {
     tab === 'devices'
       ? `${devices.length} ${devices.length === 1 ? 'device' : 'devices'}`
       : `${nodeCount} ${nodeCount === 1 ? 'node' : 'nodes'}`
+
+  if (!routerAvailable) {
+    return (
+      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[22px]">
+        <RouterUnavailable />
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[22px]">
