@@ -1,12 +1,14 @@
 import { Outlet } from 'react-router-dom'
 
 import { useTelemetryPoller } from '@/hooks/useLiveTelemetry'
+import { useRouterProbe } from '@/hooks/useRouterAvailability'
 
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 
 export function AppShell() {
   useTelemetryPoller()
+  useRouterProbe()
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground md:h-screen md:min-h-0 md:flex-row md:overflow-hidden">
