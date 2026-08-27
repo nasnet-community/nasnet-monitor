@@ -7,8 +7,6 @@
   "minimumReleaseAge": "7 days",
   "separateMajorMinor": true,
   "separateMinorPatch": true,
-  "separateMultipleMajor": true,
-  "separateMultipleMinor": true,
   "packageRules": [
     {
       "matchUpdateTypes": ["patch"],
