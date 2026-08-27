@@ -71,13 +71,13 @@ export function useDiagnostics(): DiagnosticsData {
 
     const tick = async (initial: boolean) => {
       if (cancelled) return
+      if (initial) setLoading(true)
       await Promise.all([pullDiagnostics(), pullRadio()])
       if (cancelled) return
       if (initial) setLoading(false)
       timer = setTimeout(() => void tick(false), POLL_MS)
     }
 
-    setLoading(true)
     void tick(true)
     return () => {
       cancelled = true

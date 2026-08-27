@@ -57,6 +57,14 @@ function Row({
   )
 }
 
+function useServerReadback<T>(server: T | undefined, apply: (value: T) => void): void {
+  const [seen, setSeen] = useState(server)
+  if (server !== seen) {
+    setSeen(server)
+    if (server !== undefined) apply(server)
+  }
+}
+
 function snowMeltLabel(mode: string | null): string {
   switch (mode) {
     case null:
@@ -178,18 +186,10 @@ export function SettingsScreen() {
     }
   }, [dishAddress])
 
-  useEffect(() => {
-    if (status?.stowRequested !== undefined) setSleep(status.stowRequested)
-  }, [status?.stowRequested])
-  useEffect(() => {
-    if (status?.gpsStats?.inhibitGps !== undefined) setGpsInhibited(status.gpsStats.inhibitGps)
-  }, [status?.gpsStats?.inhibitGps])
-  useEffect(() => {
-    if (status?.config?.powerSaveMode !== undefined) setScheduleOn(status.config.powerSaveMode)
-  }, [status?.config?.powerSaveMode])
-  useEffect(() => {
-    if (status?.config?.snowMeltMode !== undefined) setSnowMelt(status.config.snowMeltMode)
-  }, [status?.config?.snowMeltMode])
+  useServerReadback(status?.stowRequested, setSleep)
+  useServerReadback(status?.gpsStats?.inhibitGps, setGpsInhibited)
+  useServerReadback(status?.config?.powerSaveMode, setScheduleOn)
+  useServerReadback(status?.config?.snowMeltMode, setSnowMelt)
 
   const toggleSleep = async (next: boolean) => {
     setSleep(next)
