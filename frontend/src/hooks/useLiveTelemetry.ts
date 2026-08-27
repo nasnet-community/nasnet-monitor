@@ -11,6 +11,12 @@ import { useAppStore } from '@/store/appStore'
 import { useTelemetryStore } from '@/store/telemetryStore'
 
 const POLL_MS = 5000
+const CLIENTS_TIMEOUT_MS = 4000
+
+function routerReachable(): boolean {
+  const state = useAppStore.getState().routerState
+  return state !== 'bypass' && state !== 'unreachable'
+}
 
 export function useLiveTelemetry() {
   const isLive = useAppStore((s) => s.liveData)
@@ -62,10 +68,12 @@ export function useTelemetryPoller() {
           fetchDishStatus(dishAddress),
           fetchDishHistory(dishAddress).catch(() => undefined),
           fetchObstructionMap(dishAddress).catch(() => undefined),
-          fetchWifiClients(router).catch((err: unknown) => {
-            clientsError = err instanceof Error ? err.message : 'Could not reach the router.'
-            return { clients: [], clientIndex: null }
-          }),
+          routerReachable()
+            ? fetchWifiClients(router, CLIENTS_TIMEOUT_MS).catch((err: unknown) => {
+                clientsError = err instanceof Error ? err.message : 'Could not reach the router.'
+                return { clients: [], clientIndex: null }
+              })
+            : Promise.resolve({ clients: [], clientIndex: null }),
         ])
         if (cancelled) return
         useTelemetryStore.getState().set({
@@ -83,6 +91,7 @@ export function useTelemetryPoller() {
         if (cancelled) return
         useTelemetryStore.getState().set({
           error: err instanceof Error ? err.message : 'request failed',
+          clientsError: null,
           loading: false,
         })
       }
