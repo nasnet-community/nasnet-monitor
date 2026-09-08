@@ -4,13 +4,14 @@ import { NAV_ITEMS } from '@/constants/navigation'
 import { useDeviceState } from '@/hooks/useDeviceState'
 import { useRouterAvailability } from '@/hooks/useRouterAvailability'
 import { useSettings } from '@/hooks/useSettings'
+import { withBase } from '@/lib/basePath'
 import { cn } from '@/lib/utils'
 
 function BrandMark() {
   return (
     <div className="flex items-center gap-[11px] px-2 pb-5 pt-1.5">
       <img
-        src="/assets/logo.png"
+        src={withBase('/assets/logo.png')}
         alt="Nasnet logo"
         width={34}
         height={34}

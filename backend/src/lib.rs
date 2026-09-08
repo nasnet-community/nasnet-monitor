@@ -1,5 +1,6 @@
 pub mod api;
 pub mod config;
+pub mod spa;
 pub mod starlink;
 pub mod update;
 
@@ -8,7 +9,7 @@ use std::time::Instant;
 
 use axum::{routing::get, routing::post, Router};
 use http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN};
-use http::{Method, StatusCode};
+use http::Method;
 use tower_http::cors::{Any, CorsLayer};
 
 pub const VERSION: &str = match option_env!("APP_VERSION") {
@@ -34,7 +35,7 @@ impl AppState {
 
 /// Build the complete application router: API routes, embedded SPA, CORS,
 /// and request logging.
-pub fn router(state: Arc<AppState>) -> Router {
+pub fn router(state: Arc<AppState>, base_path: &str) -> Router {
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods([
@@ -75,19 +76,18 @@ pub fn router(state: Arc<AppState>) -> Router {
         .nest("/dish", dish_routes)
         .fallback(api::not_found);
 
-    // Embedded SPA: gzip-compressed at build time, served with ETag/304 and
-    // content negotiation; unmatched routes fall back to index.html.
-    let spa = memory_serve::load!()
-        .index_file(Some("/index.html"))
-        .fallback(Some("/index.html"))
-        .fallback_status(StatusCode::OK)
-        .into_router();
-
-    Router::new()
+    let routes = Router::new()
         .route("/health", get(api::health))
         .nest("/api", api_routes)
         .with_state(state)
-        .merge(spa)
-        .layer(axum::middleware::from_fn(api::log_requests))
+        .merge(spa::router(base_path));
+
+    let app = if base_path.is_empty() {
+        routes
+    } else {
+        Router::new().nest(base_path, routes)
+    };
+
+    app.layer(axum::middleware::from_fn(api::log_requests))
         .layer(cors)
 }

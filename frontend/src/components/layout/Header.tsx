@@ -14,6 +14,7 @@ import { NAV_ITEMS, type NavItem } from '@/constants/navigation'
 import { useRouterAvailability } from '@/hooks/useRouterAvailability'
 import { useDeviceState } from '@/hooks/useDeviceState'
 import { useStats } from '@/hooks/useStats'
+import { withBase } from '@/lib/basePath'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/appStore'
 
@@ -76,7 +77,7 @@ export function Header() {
       <div className="flex min-w-0 items-center gap-2.5">
         <Link to="/" aria-label="Home" className="shrink-0 md:hidden">
           <img
-            src="/assets/logo.png"
+            src={withBase('/assets/logo.png')}
             alt="Nasnet logo"
             width={30}
             height={30}

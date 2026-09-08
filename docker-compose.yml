@@ -11,4 +11,5 @@ services:
       PORT: 8080
       ENVIRONMENT: production
       DISH_ADDRESS: 192.168.100.1:9200
+      BASE_PATH: ""
     restart: unless-stopped

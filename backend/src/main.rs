@@ -17,7 +17,7 @@ async fn run() -> Result<(), String> {
     let cfg = config::load().map_err(|e| format!("config: {e}"))?;
 
     let state = AppState::new(cfg.dish_address.clone());
-    let app = NormalizePathLayer::trim_trailing_slash().layer(router(state));
+    let app = NormalizePathLayer::trim_trailing_slash().layer(router(state, &cfg.base_path));
 
     let addr = format!("{}:{}", cfg.host, cfg.port);
     let listener = tokio::net::TcpListener::bind(&addr)
@@ -25,6 +25,10 @@ async fn run() -> Result<(), String> {
         .map_err(|e| format!("bind {addr}: {e}"))?;
 
     print_startup_info(cfg.port);
+    if !cfg.base_path.is_empty() {
+        println!("  serving under base path {}", cfg.base_path);
+        println!();
+    }
 
     use axum::ServiceExt;
     axum::serve(
