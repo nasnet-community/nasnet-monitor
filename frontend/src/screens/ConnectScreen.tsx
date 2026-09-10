@@ -5,6 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DEFAULT_DISH_ADDRESS, DEFAULT_DISH_HOST, checkDish, withDishPort } from '@/lib/api'
+import { withBase } from '@/lib/basePath'
 import { useAppStore } from '@/store/appStore'
 
 export function ConnectScreen() {
@@ -45,7 +46,7 @@ export function ConnectScreen() {
       <Card className="flex w-full max-w-[420px] flex-col gap-6 p-6 sm:p-8">
         <div className="flex flex-col items-center gap-3 text-center">
           <img
-            src="/assets/logo.png"
+            src={withBase('/assets/logo.png')}
             alt="Nasnet logo"
             width={44}
             height={44}

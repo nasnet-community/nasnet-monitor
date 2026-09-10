@@ -154,6 +154,12 @@ The backend reads configuration from environment variables (all optional):
 | `PORT`          | `8080`               | HTTP port (must be numeric)                        |
 | `ENVIRONMENT`   | `development`        | Environment label                                  |
 | `DISH_ADDRESS`  | `192.168.100.1:9200` | Fallback gRPC target when no `X-Dish-Address` sent |
+| `BASE_PATH`     | _(empty)_            | Sub-path to serve under, e.g. `/api/plugin/view`         |
+
+`BASE_PATH` is read at startup, so the same binary or image can be mounted anywhere behind a reverse
+proxy. When set, the API and the SPA are served only under that prefix (including `/health`), so the
+proxy must forward the prefix rather than strip it. Unset means root-mounted. In development, set
+`BASE_PATH` for both `npm run dev` and the backend so the dev server proxies to a matching mount.
 
 Per-request, the gRPC target is chosen by the **`X-Dish-Address`** header (CORS-whitelisted), which
 overrides `DISH_ADDRESS`. The frontend uses default ports `9200` (dish) and `9000` (router).

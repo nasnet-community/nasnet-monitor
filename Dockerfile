@@ -47,7 +47,8 @@ COPY --from=backend /nasnet-monitor /nasnet-monitor
 ENV HOST=0.0.0.0 \
     PORT=8080 \
     ENVIRONMENT=production \
-    DISH_ADDRESS=192.168.100.1:9200
+    DISH_ADDRESS=192.168.100.1:9200 \
+    BASE_PATH=
 EXPOSE 8080
 USER 65532:65532
 ENTRYPOINT ["/nasnet-monitor"]

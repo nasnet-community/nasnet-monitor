@@ -6,6 +6,7 @@ import type {
   WifiClient,
   WifiClientsResult,
 } from '@/data/starlink'
+import { withBase } from '@/lib/basePath'
 
 const DISH_HEADER = 'X-Dish-Address'
 
@@ -82,7 +83,7 @@ async function post<T>(
   try {
     let res: Response
     try {
-      res = await fetch(path, {
+      res = await fetch(withBase(path), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +104,7 @@ async function post<T>(
 async function get<T>(path: string): Promise<T | undefined> {
   let res: Response
   try {
-    res = await fetch(path)
+    res = await fetch(withBase(path))
   } catch {
     throw new ApiError(SERVER_ISSUE, 0)
   }

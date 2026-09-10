@@ -3,7 +3,11 @@ import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-export default defineConfig({
+const rawBasePath = (process.env.BASE_PATH ?? '').trim().replace(/\/+$/, '')
+const basePath = rawBasePath && !rawBasePath.startsWith('/') ? `/${rawBasePath}` : rawBasePath
+
+export default defineConfig(({ command }) => ({
+  base: command === 'serve' ? `${basePath}/` : './',
   root: path.resolve(__dirname, 'frontend'),
   plugins: [react()],
   resolve: {
@@ -13,7 +17,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:8080',
+      [`${basePath}/api`]: 'http://localhost:8080',
     },
   },
   test: {
@@ -22,4 +26,4 @@ export default defineConfig({
     setupFiles: path.resolve(__dirname, 'frontend/src/test/setup.ts'),
     css: true,
   },
-})
+}))

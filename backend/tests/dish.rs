@@ -106,7 +106,7 @@ mod http_api {
     #[tokio::test]
     async fn dish_status_returns_envelope() {
         let addr = mock_dish::spawn().await;
-        let app = router(AppState::new(addr));
+        let app = router(AppState::new(addr), "");
         let (status, body) = call(app, "POST", "/api/dish/status", None).await;
         assert_eq!(status, StatusCode::OK);
         let value: serde_json::Value = serde_json::from_str(&body).unwrap();
@@ -118,7 +118,7 @@ mod http_api {
     #[tokio::test]
     async fn health_and_api_not_found() {
         let addr = mock_dish::spawn().await;
-        let app = router(AppState::new(addr));
+        let app = router(AppState::new(addr), "");
         let (status, body) = call(app.clone(), "GET", "/health", None).await;
         assert_eq!(status, StatusCode::OK);
         assert_eq!(
@@ -134,7 +134,7 @@ mod http_api {
     #[tokio::test]
     async fn set_config_requires_config() {
         let addr = mock_dish::spawn().await;
-        let app = router(AppState::new(addr));
+        let app = router(AppState::new(addr), "");
         let (status, body) = call(app, "POST", "/api/dish/set-config", Some("{}")).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
         assert!(body.contains("config is required"));
@@ -143,15 +143,62 @@ mod http_api {
     #[tokio::test]
     async fn spa_serves_index_for_unknown_routes() {
         let addr = mock_dish::spawn().await;
-        let app = router(AppState::new(addr));
+        let app = router(AppState::new(addr), "");
         let (status, body) = call(app, "GET", "/somewhere/deep", None).await;
         assert_eq!(status, StatusCode::OK);
         assert!(body.contains("<!doctype html>") || body.contains("<html"));
     }
 
     #[tokio::test]
+    async fn index_carries_the_base_path() {
+        let addr = mock_dish::spawn().await;
+        let app = router(AppState::new(addr), "/api/plugin/view");
+        let (status, body) = call(app, "GET", "/api/plugin/view/statistics", None).await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(
+            body.contains("<base href=\"/api/plugin/view/\" />"),
+            "got: {body}"
+        );
+        assert!(body.contains("window.__BASE_PATH__ = \"/api/plugin/view\""));
+    }
+
+    #[tokio::test]
+    async fn root_index_carries_an_empty_base_path() {
+        let addr = mock_dish::spawn().await;
+        let app = router(AppState::new(addr), "");
+        let (_, body) = call(app, "GET", "/statistics", None).await;
+        assert!(body.contains("<base href=\"/\" />"), "got: {body}");
+        assert!(body.contains("window.__BASE_PATH__ = \"\""));
+    }
+
+    #[tokio::test]
+    async fn base_path_replaces_the_root_mount() {
+        let addr = mock_dish::spawn().await;
+        let app = router(AppState::new(addr), "/api/plugin/view");
+
+        let (status, body) = call(
+            app.clone(),
+            "POST",
+            "/api/plugin/view/api/dish/status",
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains("dishy-test"));
+
+        let (status, _) = call(app.clone(), "GET", "/api/plugin/view/health", None).await;
+        assert_eq!(status, StatusCode::OK);
+
+        let (status, _) = call(app.clone(), "POST", "/api/dish/status", None).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+
+        let (status, _) = call(app, "GET", "/health", None).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
     async fn unreachable_dish_maps_to_bad_gateway() {
-        let app = router(AppState::new("127.0.0.1:1".to_string()));
+        let app = router(AppState::new("127.0.0.1:1".to_string()), "");
         let (status, body) = call(app, "POST", "/api/dish/status", None).await;
         assert_eq!(status, StatusCode::BAD_GATEWAY);
         assert!(body.contains("Couldn't connect to the device"));

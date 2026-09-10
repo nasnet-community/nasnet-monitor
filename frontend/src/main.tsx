@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import { AppShell } from '@/components/layout/AppShell'
 import { RequireConnection } from '@/components/RequireConnection'
+import { BASE_PATH } from '@/lib/basePath'
 import { applyThemeAttribute, useAppStore } from '@/store/appStore'
 import { ConnectScreen } from '@/screens/ConnectScreen'
 import { HomeScreen } from '@/screens/HomeScreen'
@@ -41,7 +42,7 @@ const router = createBrowserRouter([
       { path: 'settings', element: <SettingsScreen /> },
     ],
   },
-])
+], BASE_PATH ? { basename: BASE_PATH } : undefined)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
