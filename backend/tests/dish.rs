@@ -172,28 +172,34 @@ mod http_api {
     }
 
     #[tokio::test]
-    async fn base_path_replaces_the_root_mount() {
+    async fn base_path_serves_prefixed_and_stripped_requests() {
         let addr = mock_dish::spawn().await;
         let app = router(AppState::new(addr), "/api/plugin/view");
 
-        let (status, body) = call(
-            app.clone(),
-            "POST",
-            "/api/plugin/view/api/dish/status",
-            None,
-        )
-        .await;
-        assert_eq!(status, StatusCode::OK);
-        assert!(body.contains("dishy-test"));
+        for prefix in ["/api/plugin/view", ""] {
+            let (status, body) = call(
+                app.clone(),
+                "POST",
+                &format!("{prefix}/api/dish/status"),
+                None,
+            )
+            .await;
+            assert_eq!(status, StatusCode::OK, "prefix {prefix:?}");
+            assert!(body.contains("dishy-test"));
 
-        let (status, _) = call(app.clone(), "GET", "/api/plugin/view/health", None).await;
-        assert_eq!(status, StatusCode::OK);
+            let (status, _) = call(app.clone(), "GET", &format!("{prefix}/health"), None).await;
+            assert_eq!(status, StatusCode::OK, "prefix {prefix:?}");
 
-        let (status, _) = call(app.clone(), "POST", "/api/dish/status", None).await;
-        assert_eq!(status, StatusCode::NOT_FOUND);
+            let (status, body) =
+                call(app.clone(), "GET", &format!("{prefix}/statistics"), None).await;
+            assert_eq!(status, StatusCode::OK, "prefix {prefix:?}");
+            assert!(body.contains("<base href=\"/api/plugin/view/\" />"));
 
-        let (status, _) = call(app, "GET", "/health", None).await;
-        assert_eq!(status, StatusCode::NOT_FOUND);
+            let (status, body) =
+                call(app.clone(), "GET", &format!("{prefix}/api/nope"), None).await;
+            assert_eq!(status, StatusCode::NOT_FOUND, "prefix {prefix:?}");
+            assert_eq!(body, "{\"message\":\"Not Found\"}");
+        }
     }
 
     #[tokio::test]
