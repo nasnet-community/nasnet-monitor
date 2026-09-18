@@ -157,8 +157,9 @@ The backend reads configuration from environment variables (all optional):
 | `BASE_PATH`     | _(empty)_            | Sub-path to serve under, e.g. `/api/plugin/view`         |
 
 `BASE_PATH` is read at startup, so the same binary or image can be mounted anywhere behind a reverse
-proxy. When set, the API and the SPA are served only under that prefix (including `/health`), so the
-proxy must forward the prefix rather than strip it. Unset means root-mounted. In development, set
+proxy. When set, the API and the SPA are served both under that prefix and at the root, so the proxy
+may forward the prefix or strip it; `index.html` always points the browser at the prefix. Unset means
+root-mounted. In development, set
 `BASE_PATH` for both `npm run dev` and the backend so the dev server proxies to a matching mount.
 
 Per-request, the gRPC target is chosen by the **`X-Dish-Address`** header (CORS-whitelisted), which

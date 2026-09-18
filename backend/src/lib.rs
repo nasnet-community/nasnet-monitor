@@ -85,7 +85,7 @@ pub fn router(state: Arc<AppState>, base_path: &str) -> Router {
     let app = if base_path.is_empty() {
         routes
     } else {
-        Router::new().nest(base_path, routes)
+        Router::new().nest(base_path, routes.clone()).merge(routes)
     };
 
     app.layer(axum::middleware::from_fn(api::log_requests))
