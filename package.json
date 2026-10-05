@@ -16,7 +16,6 @@
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
-    "@fontsource/geist": "^5.3.0",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
     "@radix-ui/react-progress": "^1.1.0",
     "@radix-ui/react-scroll-area": "^1.2.0",

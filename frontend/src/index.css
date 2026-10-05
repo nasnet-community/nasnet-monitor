@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Bundled rather than loaded from Google Fonts, so the UI looks the same without internet access. */
 @font-face {
   font-family: 'Geist';
   font-style: normal;
