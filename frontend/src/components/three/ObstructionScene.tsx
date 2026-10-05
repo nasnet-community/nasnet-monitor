@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Text } from '@react-three/drei'
 import * as THREE from 'three'
+// troika-three-text can't parse woff2, and without a font it fetches one from a CDN.
+import labelFont from '@fontsource/geist/files/geist-latin-400-normal.woff?url'
 
 import { DISH_MODEL_SPECS, type DishModelSpec } from '@/data/dishModels'
 import type { ObstructionGrid } from '@/data/types'
@@ -159,6 +161,7 @@ function CompassLabel({ char, position }: { char: string; position: [number, num
   return (
     <group ref={ref} position={position}>
       <Text
+        font={labelFont}
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.42}
         color="#f4f4f6"
