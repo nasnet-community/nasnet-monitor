@@ -6,6 +6,7 @@ import { useDishModel } from '@/hooks/useDishModel'
 import { useTheme } from '@/hooks/useTheme'
 import { CompanionRouter } from './CompanionRouter'
 import { DishPanel } from './DishPanel'
+import { FitCamera } from './FitCamera'
 import { GroundCable } from './GroundCable'
 import { Lights } from './Lights'
 import { UplinkBeam } from './UplinkBeam'
@@ -14,6 +15,10 @@ import { panelBaseY } from './dishShape'
 
 // Matches the online-state panel tilt in PANEL_STATE (the beam only shows near that pose).
 const BEAM_PANEL_TILT = 0.5
+
+const CAMERA_FOV = 34
+const CAMERA_TARGET = new THREE.Vector3(0, 0.5, 0)
+const SCENE_HALF_WIDTH = 3.05
 
 function SceneContents() {
   const { deviceState } = useDeviceState()
@@ -49,12 +54,13 @@ export function DeviceScene() {
       className="absolute inset-0 z-[2]"
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}
-      camera={{ fov: 34, near: 0.1, far: 100, position: [0, 2.7, 7.1] }}
+      camera={{ fov: CAMERA_FOV, near: 0.1, far: 100, position: [0, 2.7, 7.1] }}
       onCreated={({ camera, gl }) => {
-        camera.lookAt(0, 0.5, 0)
+        camera.lookAt(CAMERA_TARGET)
         gl.outputColorSpace = THREE.SRGBColorSpace
       }}
     >
+      <FitCamera fov={CAMERA_FOV} target={CAMERA_TARGET} halfWidth={SCENE_HALF_WIDTH} />
       <Lights />
       <SceneContents />
     </Canvas>

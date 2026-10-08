@@ -36,7 +36,7 @@ export function CompassOverlay() {
 
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[64%] z-[1] h-[min(88vw,460px)] w-[min(88vw,460px)]"
+      className="pointer-events-none absolute left-1/2 top-[64%] z-[1] aspect-square w-[min(460px,121cqh,90cqw)]"
       style={{ transform: PERSPECTIVE }}
     >
       <svg viewBox="0 0 400 400" width="100%" height="100%">

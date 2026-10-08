@@ -1,6 +1,15 @@
-import { useId, useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 
 import { cn } from '@/lib/utils'
+
+const MIN_COMPACT_HEIGHT = 150
 
 export interface LineSeries {
   key: string
@@ -41,9 +50,22 @@ export function LineChart({
 }: LineChartProps) {
   const gradId = useId()
   const [hover, setHover] = useState<number | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [renderWidth, setRenderWidth] = useState<number | null>(null)
 
-  const w = viewWidth
-  const h = viewHeight
+  useEffect(() => {
+    const el = containerRef.current
+    if (fixedHeight || !el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(([entry]) => setRenderWidth(entry.contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [fixedHeight])
+
+  const compact = renderWidth != null && renderWidth > 0 && renderWidth < viewWidth
+  const w = compact ? renderWidth : viewWidth
+  const h = compact
+    ? Math.max(MIN_COMPACT_HEIGHT, (viewHeight * renderWidth) / viewWidth)
+    : viewHeight
   const pad = padding
   const n = Math.max(...series.map((s) => s.data.length))
 
@@ -73,7 +95,7 @@ export function LineChart({
   const anchorRight = tooltipLeftPct > 60
 
   return (
-    <div className={cn('relative', className)}>
+    <div ref={containerRef} className={cn('relative', className)}>
       <svg
         viewBox={`0 0 ${w} ${h}`}
         width="100%"

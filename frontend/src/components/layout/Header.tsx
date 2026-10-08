@@ -73,7 +73,7 @@ export function Header() {
   const recent = events.slice(0, 5)
 
   return (
-    <header className="relative flex items-center justify-between gap-3 border-b border-border px-5 py-2 md:px-[30px] md:py-[18px]">
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-background px-5 py-2 md:relative md:z-auto md:px-[30px] md:py-[18px]">
       <div className="flex min-w-0 items-center gap-2.5">
         <Link to="/" aria-label="Home" className="shrink-0 md:hidden">
           <img

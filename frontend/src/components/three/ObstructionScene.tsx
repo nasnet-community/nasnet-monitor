@@ -8,6 +8,7 @@ import type { ObstructionGrid } from '@/data/types'
 
 import { CompassGlyph } from './CompassGlyph'
 import { DishSlab } from './DishSlab'
+import { FitCamera } from './FitCamera'
 import { Lights } from './Lights'
 
 const ELEV_TILT = -1.0
@@ -250,6 +251,10 @@ function Rig({ grid, spec }: { grid: ObstructionGrid | null; spec: DishModelSpec
   )
 }
 
+const CAMERA_FOV = 30
+const CAMERA_TARGET = new THREE.Vector3(0, 0.85, 0)
+const SCENE_HALF_WIDTH = DOME_RADIUS + 0.15
+
 interface ObstructionSceneProps {
   grid: ObstructionGrid | null
   spinSpeed: number
@@ -266,11 +271,12 @@ export function ObstructionScene({ grid, spinSpeed, spec }: ObstructionSceneProp
       className="absolute inset-0"
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}
-      camera={{ fov: 30, near: 0.1, far: 100, position: [0, 5.9, 11.4] }}
+      camera={{ fov: CAMERA_FOV, near: 0.1, far: 100, position: [0, 5.9, 11.4] }}
       onCreated={({ gl }) => {
         gl.outputColorSpace = THREE.SRGBColorSpace
       }}
     >
+      <FitCamera fov={CAMERA_FOV} target={CAMERA_TARGET} halfWidth={SCENE_HALF_WIDTH} />
       <Lights />
       <Rig grid={grid} spec={spec ?? DISH_MODEL_SPECS.unknown} />
       <OrbitControls
