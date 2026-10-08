@@ -40,7 +40,7 @@ const COLUMNS: { key: SortKey; label: string; align: 'left' | 'right'; className
   { key: 'cause', label: 'Cause', align: 'left' },
   { key: 'type', label: 'Type', align: 'left', className: 'hidden sm:table-cell' },
   { key: 'duration', label: 'Duration', align: 'right' },
-  { key: 'started', label: 'Started', align: 'right' },
+  { key: 'started', label: 'Started', align: 'right', className: 'hidden sm:table-cell' },
 ]
 
 export function EventsScreen() {
@@ -87,7 +87,7 @@ export function EventsScreen() {
                     <button
                       onClick={() => toggleSort(col.key)}
                       className={cn(
-                        'group inline-flex items-center gap-1.5 transition-colors hover:text-foreground',
+                        'group inline-flex min-h-[36px] items-center gap-1.5 transition-colors hover:text-foreground',
                         col.align === 'right' && 'flex-row-reverse',
                         activeSort && 'text-foreground'
                       )}
@@ -112,7 +112,12 @@ export function EventsScreen() {
                 <TableCell className="font-medium">
                   <span className="flex items-center gap-2.5">
                     <span className={cn('h-2 w-2 shrink-0 rounded-full', causeTone(e.cause))} />
-                    {e.cause}
+                    <span className="min-w-0">
+                      <span className="block [overflow-wrap:anywhere]">{e.cause}</span>
+                      <span className="block font-mono-nums text-[12px] font-normal text-faint sm:hidden">
+                        {formatWhen(e.startMs)}
+                      </span>
+                    </span>
                   </span>
                 </TableCell>
                 <TableCell className="hidden text-[12.5px] text-muted-foreground sm:table-cell">
@@ -121,7 +126,7 @@ export function EventsScreen() {
                 <TableCell className="whitespace-nowrap text-right font-mono-nums font-medium">
                   {formatDuration(e.durationS)}
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono-nums text-faint">
+                <TableCell className="hidden whitespace-nowrap text-right font-mono-nums text-faint sm:table-cell">
                   {formatWhen(e.startMs)}
                 </TableCell>
               </TableRow>

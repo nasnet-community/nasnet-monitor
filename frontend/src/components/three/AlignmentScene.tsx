@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { Line, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -7,6 +7,7 @@ import { DISH_MODEL_SPECS, type DishModelSpec } from '@/data/dishModels'
 
 import { CompassGlyph } from './CompassGlyph'
 import { DishSlab } from './DishSlab'
+import { FitCamera } from './FitCamera'
 import { Lights } from './Lights'
 import { dishShape } from './dishShape'
 
@@ -248,22 +249,6 @@ const CAMERA_TARGET = new THREE.Vector3(0, 0.55, 0)
 // Widest scene content: the rotation arrow (RING_RADIUS + 0.55) plus its cone head.
 const SCENE_HALF_WIDTH = 2.9
 
-// The FOV is vertical, so on narrow (portrait) canvases the horizontal view
-// shrinks and the compass ring gets clipped; zoom out just enough to keep it framed.
-function FitCamera() {
-  const camera = useThree((s) => s.camera)
-  const size = useThree((s) => s.size)
-  useEffect(() => {
-    const aspect = size.width / Math.max(1, size.height)
-    const dist = camera.position.distanceTo(CAMERA_TARGET)
-    const halfWidth = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2)) * aspect * dist
-    // eslint-disable-next-line react-hooks/immutability -- three.js cameras are driven by mutation
-    camera.zoom = Math.min(1, halfWidth / SCENE_HALF_WIDTH)
-    camera.updateProjectionMatrix()
-  }, [camera, size])
-  return null
-}
-
 export function AlignmentScene({
   aligned,
   searching,
@@ -281,7 +266,7 @@ export function AlignmentScene({
         gl.outputColorSpace = THREE.SRGBColorSpace
       }}
     >
-      <FitCamera />
+      <FitCamera fov={CAMERA_FOV} target={CAMERA_TARGET} halfWidth={SCENE_HALF_WIDTH} />
       <Lights />
       <Rig
         aligned={aligned}

@@ -73,7 +73,7 @@ export function ObstructionsScreen() {
             onClick={() => setInfoOpen((v) => !v)}
             aria-label="About obstructions"
             aria-expanded={infoOpen}
-            className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-faint transition-colors hover:text-foreground"
+            className="relative flex h-6 w-6 items-center justify-center rounded-full border border-border text-faint transition-colors after:absolute after:-inset-2.5 hover:text-foreground"
           >
             <Info className="h-3.5 w-3.5" strokeWidth={2} />
           </button>

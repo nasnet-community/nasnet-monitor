@@ -73,7 +73,7 @@ export function HomeScreen() {
           </Card>
 
           <div
-            className="relative min-h-[320px] flex-1 overflow-hidden rounded-[18px] border border-border sm:min-h-[380px]"
+            className="relative min-h-[320px] flex-1 overflow-hidden rounded-[18px] border border-border [container-type:size] sm:min-h-[380px]"
             style={{ background: 'var(--hero-bg)' }}
           >
             <CompassOverlay />
